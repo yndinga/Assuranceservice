@@ -1,0 +1,25 @@
+version: '3.9'
+
+# docker-compose qui utilise l'infrastructure partagée
+# Démarrez d'abord l'infrastructure : docker-compose -f ../docker-compose.infrastructure.yml up -d
+# Puis ce service : docker-compose -f docker-compose.shared.yml up -d
+
+services:
+  assuranceservice:
+    build:
+      context: .
+      dockerfile: src/Api/Dockerfile
+    container_name: assuranceservice
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres_shared;Port=5432;Database=GUOT_ASSURANCE;Username=postgres;Password=Yvann2018!
+      - RabbitMQ__ConnectionString=amqp://guest:guest@rabbitmq_shared:5672
+    ports:
+      - "8087:8080"
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    external: true
+    name: microservices-network
+

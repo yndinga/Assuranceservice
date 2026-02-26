@@ -1,0 +1,115 @@
+═══════════════════════════════════════════════════════════
+    🔧 ACTIVER SQL SERVER POUR LE PROJET
+═══════════════════════════════════════════════════════════
+
+❌ PROBLÈME DÉTECTÉ : SQL Server n'écoute pas sur le port 1433
+
+═══════════════════════════════════════════════════════════
+
+✅ SOLUTION - 3 ÉTAPES :
+
+1️⃣  VÉRIFIER QUE SQL SERVER EST DÉMARRÉ
+   ──────────────────────────────────────────────────────
+
+   a) Appuyez sur Win + R
+   b) Tapez: services.msc
+   c) Cherchez "SQL Server (MSSQLSERVER)"
+   d) Vérifiez que Status = "En cours d'exécution"
+   e) Si arrêté, clic droit → "Démarrer"
+
+
+2️⃣  ACTIVER TCP/IP
+   ──────────────────────────────────────────────────────
+
+   a) Ouvrez "SQL Server Configuration Manager"
+      (Cherchez dans le menu Démarrer)
+   
+   b) Allez dans :
+      SQL Server Network Configuration
+      → Protocols for MSSQLSERVER
+   
+   c) Double-cliquez sur "TCP/IP"
+   
+   d) Onglet "Protocol" :
+      - Enabled: Yes
+   
+   e) Onglet "IP Addresses" :
+      - Faites défiler jusqu'à "IPAll"
+      - TCP Port: 1433
+   
+   f) Cliquez "OK"
+
+
+3️⃣  REDÉMARRER SQL SERVER
+   ──────────────────────────────────────────────────────
+
+   Dans SQL Server Configuration Manager :
+   
+   a) Allez dans "SQL Server Services"
+   b) Clic droit sur "SQL Server (MSSQLSERVER)"
+   c) Cliquez "Restart"
+   
+   OU dans services.msc :
+   
+   a) Clic droit sur "SQL Server (MSSQLSERVER)"
+   b) Cliquez "Redémarrer"
+
+═══════════════════════════════════════════════════════════
+
+✅ APRÈS LE REDÉMARRAGE :
+
+1. Testez la connexion :
+   PowerShell> Test-NetConnection -ComputerName 127.0.0.1 -Port 1433
+   
+   Si TcpTestSucceeded = True, c'est bon !
+
+
+2. Créez la base de données dans SSMS :
+   - Nouvelle base de données
+   - Nom: GUOT_ASSURANCE
+
+
+3. Redémarrez le conteneur Docker :
+   PowerShell> docker-compose restart assuranceservice
+
+
+4. Testez l'API :
+   PowerShell> Invoke-WebRequest -Uri "http://localhost:8087/api/v1/assurances"
+
+═══════════════════════════════════════════════════════════
+
+💡 VÉRIFICATIONS ADDITIONNELLES :
+
+📌 Authentification SQL Server :
+
+   1. Ouvrez SSMS
+   2. Connectez-vous à votre serveur
+   3. Clic droit sur le serveur → "Properties"
+   4. Aller dans "Security"
+   5. Vérifiez que "SQL Server and Windows Authentication mode"
+      est sélectionné (Mixed Mode)
+   6. Si modifié, redémarrez SQL Server
+
+
+📌 Compte SA activé :
+
+   1. Dans SSMS, allez dans : Security → Logins
+   2. Clic droit sur "sa" → "Properties"
+   3. Vérifiez que "Login is disabled" est DÉCOCHÉ
+   4. Définissez le mot de passe: yvann
+   5. Cliquez "OK"
+
+═══════════════════════════════════════════════════════════
+
+🔍 TESTER MANUELLEMENT LA CONNEXION SQL SERVER :
+
+Dans SSMS, essayez de vous connecter avec :
+  Server: localhost,1433
+  Authentication: SQL Server Authentication
+  Login: sa
+  Password: yvann
+
+Si ça marche dans SSMS, ça marchera avec Docker !
+
+═══════════════════════════════════════════════════════════
+

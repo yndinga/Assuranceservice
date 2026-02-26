@@ -1,0 +1,35 @@
+stages:
+  - build
+  - publish
+  - docker
+
+variables:
+  DOTNET_VERSION: "8.0"
+
+build:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  script:
+    - dotnet restore ./src/Api/AssuranceService.Api.csproj
+    - dotnet build -c Release ./src/Api/AssuranceService.Api.csproj
+
+publish:
+  stage: publish
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  script:
+    - dotnet publish -c Release -o out ./src/Api/AssuranceService.Api.csproj
+  artifacts:
+    paths:
+      - out/
+
+docker:
+  stage: docker
+  image: docker:25
+  services:
+    - docker:25-dind
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:latest -f src/Api/Dockerfile .
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main

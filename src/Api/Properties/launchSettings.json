@@ -1,0 +1,14 @@
+{
+  "profiles": {
+    "AssuranceService.Api": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:5206"
+      },
+      "applicationUrl": "http://localhost:5206"
+    }
+  }
+}

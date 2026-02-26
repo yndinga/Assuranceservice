@@ -1,0 +1,98 @@
+═══════════════════════════════════════════════════════════
+    ✅ ASSURANCESERVICE - SQL SERVER LOCAL (WINDOWS)
+═══════════════════════════════════════════════════════════
+
+Le projet utilise maintenant votre SQL Server local Windows.
+Configuration identique à la production !
+
+═══════════════════════════════════════════════════════════
+
+📋 ÉTAPES À SUIVRE :
+
+1️⃣  CRÉER LA BASE DE DONNÉES (si pas déjà fait)
+   
+   a) Ouvrez SQL Server Management Studio (SSMS)
+   b) Connectez-vous à votre instance SQL Server
+   c) Clic droit sur "Databases" → "New Database..."
+   d) Nom: GUOT_ASSURANCE
+   e) Cliquez "OK"
+
+
+2️⃣  VÉRIFIER TCP/IP (si première fois)
+   
+   a) Ouvrez "SQL Server Configuration Manager"
+   b) SQL Server Network Configuration
+      → Protocols for MSSQLSERVER
+   c) Vérifiez que "TCP/IP" est "Enabled"
+   d) Si modifié, redémarrez SQL Server
+
+
+3️⃣  VÉRIFIER L'AUTHENTIFICATION
+   
+   - SQL Server doit être en "Mixed Mode Authentication"
+   - Le compte SA doit être activé
+   - Mot de passe SA: Yvann2018!
+
+
+4️⃣  TESTER LA CONNEXION
+   
+   Une fois la base créée, appelez l'API:
+   
+   PowerShell> Invoke-WebRequest -Uri "http://localhost:8087/api/v1/assurances"
+   
+   Si succès, les tables seront créées automatiquement !
+
+═══════════════════════════════════════════════════════════
+
+📊 CONNEXION SQL SERVER :
+
+Server   : localhost (ou 127.0.0.1)
+Port     : 1433
+Database : GUOT_ASSURANCE
+User     : sa
+Password : Yvann2018!
+
+═══════════════════════════════════════════════════════════
+
+🚀 SERVICES EN COURS :
+
+✓ RabbitMQ           : localhost:5672
+✓ RabbitMQ Management: http://localhost:15672
+✓ AssuranceService   : http://localhost:8087
+✓ Swagger UI         : http://localhost:8087/swagger
+
+En attente de SQL Server local (Windows)...
+
+═══════════════════════════════════════════════════════════
+
+💡 AVANTAGES SQL SERVER LOCAL :
+
+✅ Pas de conteneur = moins de ressources
+✅ SSMS pour gérer facilement la base
+✅ Même environnement dev/production
+✅ Performance optimale
+✅ Pas de problèmes de connexion Docker
+
+═══════════════════════════════════════════════════════════
+
+🔧 COMMANDES UTILES :
+
+Redémarrer le projet:
+  docker-compose restart assuranceservice
+
+Voir les logs:
+  docker-compose logs -f assuranceservice
+
+Arrêter:
+  docker-compose down
+
+═══════════════════════════════════════════════════════════
+
+
+
+
+
+
+
+
+
