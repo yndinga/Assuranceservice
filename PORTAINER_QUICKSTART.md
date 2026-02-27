@@ -4,7 +4,25 @@ Guide ultra-rapide pour déployer **AssuranceService** dans Portainer avec Postg
 
 ---
 
-## ⚡ En 5 Étapes
+## 📦 Déployer par Git (depuis GitHub)
+
+Pour déployer la stack directement depuis le dépôt Git dans Portainer :
+
+1. **Portainer** → **Stacks** → **Add stack**
+2. **Name** : `assuranceservice`
+3. Choisir **Build method** : **Git repository**
+4. Renseigner :
+   - **Repository URL** : `https://github.com/yndinga/Assuranceservice.git`
+   - **Compose path** : `portainer-stack.yml`
+   - **Branch** : `master` (ou la branche à utiliser)
+5. (Optionnel) **Environment variables** : ajouter les variables si besoin (ex. `SQL_CONNECTION_STRING`, `CONSUL_HOST`).
+6. Cliquer **Deploy the stack**.
+
+Portainer va cloner le dépôt et appliquer le fichier `portainer-stack.yml`. Les prochains déploiements ( **Update the stack** ) récupéreront les changements depuis Git.
+
+---
+
+## ⚡ En 5 Étapes (sans Git)
 
 ### 1️⃣ Builder l'Image (Local)
 

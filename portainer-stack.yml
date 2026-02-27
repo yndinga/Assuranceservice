@@ -3,7 +3,7 @@
 
 services:
   assuranceservice:
-    image: yndinga05/assuranceservice:v1.0.0
+    image: ghcr.io/yndinga/assuranceservice:v1.0.0
     container_name: assuranceservice
     ports:
       - "8087:8080"
