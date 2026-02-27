@@ -1,5 +1,7 @@
-# Stack Portainer - AssuranceService (même structure que DeclarationImportationService)
-# Coller dans Portainer > Stacks > Web editor
+# Stack Portainer - AssuranceService (image GHCR)
+# L'image est publiée par GitHub Actions (.github/workflows/docker-publish-ghcr.yml)
+# Pour avoir v1.0.0 : créer un tag git (git tag v1.0.0 && git push origin v1.0.0)
+# Coller dans Portainer > Stacks > Web editor ou déployer par Git
 
 services:
   assuranceservice:
@@ -12,13 +14,11 @@ services:
       - DOTNET_CLI_TELEMETRY_OPTOUT=1
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__AssuranceConnection=${SQL_CONNECTION_STRING:-Server=192.168.3.178,1434;Database=MS_ASSURANCE;User ID=sa;Password=MonMotDePasseFort!;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;}
-      - ApplyMigrationsAtStartup=${ApplyMigrationsAtStartup:-true}
-      - RabbitMQ__Enabled=${RabbitMQ__Enabled:-false}
-      - Consul__Host=${CONSUL_HOST:-host.docker.internal}
+      - Consul__Host=192.168.2.89
       - Consul__Port=8500
       - Consul__ServiceName=AssuranceService
       - Consul__ServiceId=assurance-service-1
-      - Consul__ServiceAddress=${CONSUL_SERVICE_ADDRESS:-192.168.2.89}
+      - Consul__ServiceAddress=192.168.2.89
       - Consul__ServicePort=8087
       - Consul__HealthCheckPath=/health
     extra_hosts:

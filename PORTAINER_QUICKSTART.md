@@ -4,6 +4,27 @@ Guide ultra-rapide pour déployer **AssuranceService** dans Portainer avec Postg
 
 ---
 
+## 🐳 Publier l'image sur GHCR (pour que Portainer voie l'image)
+
+L'image `ghcr.io/yndinga/assuranceservice:v1.0.0` est construite et poussée par **GitHub Actions**.
+
+- **Première fois** : poussez le workflow et créez un tag pour publier la version `v1.0.0` :
+  ```powershell
+  git tag v1.0.0
+  git push origin v1.0.0
+  ```
+  Le workflow `.github/workflows/docker-publish-ghcr.yml` va builder et pousser l'image sur GHCR.
+
+- **Ensuite** : chaque push sur `master` publie aussi le tag `latest`. Pour une nouvelle version (ex. v1.0.1) :
+  ```powershell
+  git tag v1.0.1
+  git push origin v1.0.1
+  ```
+
+Une fois l'image sur GHCR, la stack Portainer peut la récupérer sans erreur « manifest unknown ».
+
+---
+
 ## 📦 Déployer par Git (depuis GitHub)
 
 Pour déployer la stack directement depuis le dépôt Git dans Portainer :
