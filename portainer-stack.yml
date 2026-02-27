@@ -1,6 +1,5 @@
-# Stack Portainer - AssuranceService (image GHCR)
-# L'image est publiée par GitHub Actions (.github/workflows/docker-publish-ghcr.yml)
-# Pour avoir v1.0.0 : créer un tag git (git tag v1.0.0 && git push origin v1.0.0)
+# Stack Portainer - AssuranceService (image GHCR, build via Git)
+# Build/push par Git : git tag v1.0.0 && git push origin v1.0.0 (déclenche le workflow Actions)
 # Coller dans Portainer > Stacks > Web editor ou déployer par Git
 
 services:

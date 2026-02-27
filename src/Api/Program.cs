@@ -187,64 +187,37 @@ api.MapGet("/assurances/{assuranceId:guid}/voyages", async (Guid assuranceId, IM
 });
 
 // ===== API Référentiel (même structure que DeclarationImportationService) =====
-api.MapGet("/referentiel/pays", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
+// Exposés sous /api/v1/referentiel/... ET /referentiel/... pour compatibilité (GET référentiels)
+var referentielHandlers = new Func<AssuranceService.Infrastructure.Data.AssuranceDbContext, Task<IResult>>[]
 {
-    var list = await db.Pays.Where(p => p.Actif).OrderBy(p => p.Nom).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielPays").WithTags("Referentiel");
+    async (db) => Results.Ok(await db.Pays.Where(p => p.Actif).OrderBy(p => p.Nom).ToListAsync()),
+    async (db) => Results.Ok(await db.Departements.Where(d => d.Actif).OrderBy(d => d.Ordre).ThenBy(d => d.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Devises.Where(d => d.Actif).OrderBy(d => d.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Modules.Where(m => m.Actif).OrderBy(m => m.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Aeroports.Where(a => a.Actif).OrderBy(a => a.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Ports.Where(p => p.Actif).OrderBy(p => p.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Corridors.Where(c => c.Actif).OrderBy(c => c.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Routes.Where(r => r.Actif).OrderBy(r => r.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.Troncons.Where(t => t.Actif).OrderBy(t => t.Code).ToListAsync()),
+    async (db) => Results.Ok(await db.TauxDeChanges.Where(t => t.Actif).OrderBy(t => t.ValideDe).ToListAsync()),
+};
 
-api.MapGet("/referentiel/departements", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Departements.Where(d => d.Actif).OrderBy(d => d.Ordre).ThenBy(d => d.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielDepartements").WithTags("Referentiel");
+var referentielRoutes = new[] { ("pays", "GetReferentielPays"), ("departements", "GetReferentielDepartements"), ("devises", "GetReferentielDevises"), ("modules", "GetReferentielModules"), ("aeroports", "GetReferentielAeroports"), ("ports", "GetReferentielPorts"), ("corridors", "GetReferentielCorridors"), ("routes", "GetReferentielRoutes"), ("troncons", "GetReferentielTroncons"), ("taux-de-change", "GetReferentielTauxDeChange") };
 
-api.MapGet("/referentiel/devises", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
+for (var i = 0; i < referentielRoutes.Length; i++)
 {
-    var list = await db.Devises.Where(d => d.Actif).OrderBy(d => d.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielDevises").WithTags("Referentiel");
+    var (path, name) = referentielRoutes[i];
+    var h = referentielHandlers[i];
+    api.MapGet($"/referentiel/{path}", (AssuranceService.Infrastructure.Data.AssuranceDbContext db) => h(db)).WithName(name).WithTags("Referentiel");
+}
 
-api.MapGet("/referentiel/modules", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
+// Référentiel sans préfixe /api/v1 (GET /referentiel/...) pour clients qui appellent directement
+var refGroup = app.MapGroup("/referentiel").WithTags("Referentiel");
+for (var i = 0; i < referentielRoutes.Length; i++)
 {
-    var list = await db.Modules.Where(m => m.Actif).OrderBy(m => m.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielModules").WithTags("Referentiel");
-
-api.MapGet("/referentiel/aeroports", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Aeroports.Where(a => a.Actif).OrderBy(a => a.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielAeroports").WithTags("Referentiel");
-
-api.MapGet("/referentiel/ports", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Ports.Where(p => p.Actif).OrderBy(p => p.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielPorts").WithTags("Referentiel");
-
-api.MapGet("/referentiel/corridors", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Corridors.Where(c => c.Actif).OrderBy(c => c.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielCorridors").WithTags("Referentiel");
-
-api.MapGet("/referentiel/routes", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Routes.Where(r => r.Actif).OrderBy(r => r.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielRoutes").WithTags("Referentiel");
-
-api.MapGet("/referentiel/troncons", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.Troncons.Where(t => t.Actif).OrderBy(t => t.Code).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielTroncons").WithTags("Referentiel");
-
-api.MapGet("/referentiel/taux-de-change", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db) =>
-{
-    var list = await db.TauxDeChanges.Where(t => t.Actif).OrderBy(t => t.ValideDe).ToListAsync();
-    return Results.Ok(list);
-}).WithName("GetReferentielTauxDeChange").WithTags("Referentiel");
+    var (path, _) = referentielRoutes[i];
+    var h = referentielHandlers[i];
+    refGroup.MapGet($"/{path}", (AssuranceService.Infrastructure.Data.AssuranceDbContext db) => h(db));
+}
 
 await app.RunAsync();

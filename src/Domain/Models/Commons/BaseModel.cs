@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace AssuranceService.Domain.Models.Commons;
 
@@ -11,6 +12,7 @@ public abstract class BaseModel
     public Guid Id { get; set; }
 
     [NotMapped]
+    [JsonIgnore]
     public Guid ID { get => Id; set => Id = value; }
 
     public string? CreerPar { get; set; }
