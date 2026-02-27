@@ -1,10 +1,10 @@
 # Stack Portainer - AssuranceService (image GHCR, build via Git)
-# Build/push par Git : git tag v1.0.0 && git push origin v1.0.0 (déclenche le workflow Actions)
-# Coller dans Portainer > Stacks > Web editor ou déployer par Git
+# Version : définir IMAGE_TAG dans les variables d'environnement Portainer (ex: v1.1.0)
+# Build/push : git tag v1.1.0 && git push origin v1.1.0 (déclenche le workflow Actions)
 
 services:
   assuranceservice:
-    image: ghcr.io/yndinga/assuranceservice:v1.0.0
+    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-v1.1.0}
     container_name: assuranceservice
     ports:
       - "8087:8080"
