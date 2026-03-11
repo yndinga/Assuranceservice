@@ -30,7 +30,7 @@ public class CreateMarchandiseValidator : AbstractValidator<CreateMarchandiseCom
             .MaximumLength(500).When(x => !string.IsNullOrWhiteSpace(x.Description));
 
         RuleFor(x => x.Devise)
-            .MaximumLength(50).When(x => !string.IsNullOrWhiteSpace(x.Devise));
+            .NotEmpty().WithMessage("La devise (code) est requise.");
 
         RuleFor(x => x.MasseBrute)
             .MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.MasseBrute));

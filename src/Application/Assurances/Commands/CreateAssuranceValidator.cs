@@ -30,6 +30,10 @@ public class CreateAssuranceValidator : AbstractValidator<CreateAssuranceCommand
             .WithMessage("Le placeholder 'string' n'est pas accepté.")
             .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.Duree));
 
+        RuleFor(x => x.Module)
+            .NotEmpty().WithMessage("Le module est requis (ex: MA, AE, RO, FL).")
+            .MaximumLength(250);
+
         RuleFor(x => x.GarantieId)
             .NotEmpty().WithMessage("La garantie (GarantieId) est requise pour le calcul de la prime.")
             .When(x => x.GarantieId.HasValue);

@@ -14,4 +14,6 @@ public class Devise : BaseModel
     public string Nom { get; set; } = string.Empty;
 
     public bool Actif { get; set; } = true;
+
+    public virtual ICollection<TauxDeChange> TauxDeChanges { get; set; } = new List<TauxDeChange>();
 }

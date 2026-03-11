@@ -5,11 +5,15 @@ public record VoyageDto
     public Guid ID { get; init; }
     public Guid AssuranceId { get; init; }
 
-    public Guid? ModuleId { get; init; }
-    public string? ModuleCode { get; init; }
+    /// <summary>Code du type de transport (code uniquement, pas d'ID) : MA, AE, RO, FL.</summary>
+    public string ModuleCode { get; init; } = string.Empty;
     public string NomTransporteur { get; init; } = string.Empty;
     public string NomNavire { get; init; } = string.Empty;
     public string TypeNavire { get; init; } = string.Empty;
+    /// <summary>Défini par l'importateur, peut être null.</summary>
+    public string? LieuSejour { get; init; }
+    /// <summary>Défini par l'importateur, peut être null.</summary>
+    public string? DureeSejour { get; init; }
     public string PaysProvenance { get; init; } = string.Empty;
     public string PaysDestination { get; init; } = string.Empty;
 

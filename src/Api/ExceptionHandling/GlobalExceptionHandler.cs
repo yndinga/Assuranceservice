@@ -60,15 +60,22 @@ public class GlobalExceptionHandler : IExceptionHandler
                 break;
 
             case DbUpdateException ex:
-                status = HttpStatusCode.Conflict;
                 var sqlDetail = ex.InnerException?.Message ?? ex.Message;
                 if (IsPortForeignKeyError(sqlDetail))
                 {
+                    status = HttpStatusCode.UnprocessableEntity;
                     title  = "Données invalides";
                     detail = "Le port n'existe pas.";
                 }
+                else if (IsDataTypeConversionError(sqlDetail))
+                {
+                    status = HttpStatusCode.UnprocessableEntity;
+                    title  = "Données invalides";
+                    detail = GetConversionErrorMessage(sqlDetail);
+                }
                 else
                 {
+                    status = HttpStatusCode.Conflict;
                     title  = "Erreur de base de données";
                     detail = _env.IsDevelopment()
                         ? $"{ex.Message} | Détail SQL : {sqlDetail}"
@@ -98,6 +105,30 @@ public class GlobalExceptionHandler : IExceptionHandler
         await httpContext.Response.WriteAsJsonAsync(problem, cancellationToken);
 
         return true;
+    }
+
+    /// <summary>
+    /// Détecte une erreur de conversion de type (ex. nvarchar vers numeric).
+    /// </summary>
+    private static bool IsDataTypeConversionError(string sqlMessage)
+    {
+        if (string.IsNullOrEmpty(sqlMessage)) return false;
+        return sqlMessage.Contains("converting data type", StringComparison.OrdinalIgnoreCase) ||
+               sqlMessage.Contains("conversion failed", StringComparison.OrdinalIgnoreCase) ||
+               sqlMessage.Contains("nvarchar to numeric", StringComparison.OrdinalIgnoreCase) ||
+               sqlMessage.Contains("varchar to numeric", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Message clair pour les erreurs de conversion de type.
+    /// </summary>
+    private static string GetConversionErrorMessage(string sqlMessage)
+    {
+        if (sqlMessage.Contains("nvarchar to numeric", StringComparison.OrdinalIgnoreCase) ||
+            sqlMessage.Contains("varchar to numeric", StringComparison.OrdinalIgnoreCase))
+            return "Une valeur texte a été fournie pour un champ numérique. Vérifiez les champs (ex. Taux de garantie : envoyer un nombre comme 0.002, pas une chaîne). Si la base a été migrée récemment, redémarrez l'application et réessayez.";
+
+        return "Format de donnée invalide : un champ attend un type différent (ex. nombre au lieu de texte). Vérifiez les valeurs envoyées.";
     }
 
     /// <summary>
@@ -132,6 +163,10 @@ public class GlobalExceptionHandler : IExceptionHandler
         if (sqlMessage.Contains("Invalid column name", StringComparison.OrdinalIgnoreCase) ||
             sqlMessage.Contains("column", StringComparison.OrdinalIgnoreCase))
             return "Erreur de structure de base de données. Une migration est peut-être manquante.";
+
+        if (sqlMessage.Contains("converting data type", StringComparison.OrdinalIgnoreCase) ||
+            sqlMessage.Contains("conversion failed", StringComparison.OrdinalIgnoreCase))
+            return "Une valeur a un format incorrect pour un champ (ex. texte au lieu d'un nombre). Vérifiez les champs Taux, montants, etc.";
 
         return "Une erreur de base de données s'est produite.";
     }

@@ -20,7 +20,8 @@ public class CreatePrimeValidator : AbstractValidator<CreatePrimeCommand>
             .MaximumLength(255);
 
         RuleFor(x => x.Taux)
-            .MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.Taux));
+            .InclusiveBetween(0m, 1m).When(x => x.Taux.HasValue)
+            .WithMessage("Le taux doit être entre 0 et 1 (ex. 0,002).");
 
         RuleFor(x => x.PrimeNette)
             .GreaterThanOrEqualTo(0).When(x => x.PrimeNette.HasValue);

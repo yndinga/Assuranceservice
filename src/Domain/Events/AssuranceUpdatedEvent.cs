@@ -8,7 +8,7 @@ public record AssuranceUpdatedEvent
     public string TypeContrat { get; init; } = string.Empty;
     public DateTime? DateDebut { get; init; }
     public DateTime? DateFin { get; init; }
-    public string Statut { get; init; } = string.Empty;
+    public string Statut { get; init; } = "10";
     public DateTime UpdatedAt { get; init; }
 }
 

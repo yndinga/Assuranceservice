@@ -8,6 +8,7 @@ namespace AssuranceService.Domain.Models.Referentiel;
 public class TauxDeChange : BaseModel
 {
     public Guid DeviseId { get; set; }
+    public virtual Devise? Devise { get; set; }
 
     [Required]
     [MaxLength(100)]

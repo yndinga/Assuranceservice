@@ -44,11 +44,11 @@ public class PrimeCalculatorService : IPrimeCalculatorService
             throw new InvalidOperationException($"Garantie {request.GarantieId} introuvable");
         }
 
-        // Convertir le taux de string à decimal
-        if (!decimal.TryParse(garantie.Taux, out var tauxGarantie))
+        if (!garantie.Taux.HasValue || garantie.Taux.Value < 0)
         {
             throw new InvalidOperationException($"Taux de garantie invalide: {garantie.Taux}");
         }
+        var tauxGarantie = garantie.Taux.Value;
 
         var accessoires = garantie.Accessoires;
 

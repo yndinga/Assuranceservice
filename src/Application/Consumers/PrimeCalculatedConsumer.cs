@@ -1,4 +1,5 @@
 using MassTransit;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Events;
 using AssuranceService.Application.Common;
 using Microsoft.Extensions.Logging;
@@ -50,7 +51,7 @@ public class PrimeCalculatedConsumer : IConsumer<PrimeCalculatedEvent>
             await _primeRepository.CreateAsync(prime);
 
             // Mettre à jour le statut de l'assurance
-            assurance.Statut = "PrimeCalculated";
+            assurance.Statut = StatutAssuranceCodes.Elaboré;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogInformation("Prime created and Assurance {AssuranceId} status updated to PrimeCalculated", context.Message.AssuranceId);

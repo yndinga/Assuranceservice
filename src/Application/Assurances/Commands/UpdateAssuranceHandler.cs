@@ -28,6 +28,7 @@ public class UpdateAssuranceHandler : IRequestHandler<UpdateAssuranceCommand, Un
         assurance.TypeContrat = request.TypeContrat;
         assurance.Duree = request.Duree;
         assurance.Statut = request.Statut;
+        assurance.Module = request.Module;
         assurance.GarantieId = request.GarantieId;
         assurance.AssureurId = request.AssureurId;
         assurance.IntermediaireId = request.IntermediaireId;

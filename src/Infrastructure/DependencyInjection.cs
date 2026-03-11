@@ -3,6 +3,7 @@ using AssuranceService.Infrastructure.Data;
 using AssuranceService.Infrastructure.Repositories;
 using AssuranceService.Infrastructure.Messaging;
 using AssuranceService.Infrastructure.ExternalServices;
+using AssuranceService.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,19 +29,24 @@ public static class DependencyInjection
         });
         
         // Repositories
-        services.AddScoped<IPolicyRepository, PolicyRepository>();
-        services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IAssuranceRepository, AssuranceRepository>();
         services.AddScoped<IMarchandiseRepository, MarchandiseRepository>();
         services.AddScoped<IPrimeRepository, PrimeRepository>();
         services.AddScoped<IGarantieRepository, GarantieRepository>();
         services.AddScoped<IVoyageRepository, VoyageRepository>();
         services.AddScoped<IModuleRepository, ModuleRepository>();
+        services.AddScoped<IDeviseRepository, DeviseRepository>();
+        services.AddScoped<IDocumentRepository, DocumentRepository>();
+        services.AddScoped<IPortRepository, PortRepository>();
+
+        // Stockage objet (MinIO)
+        services.AddSingleton<IObjectStorageService, MinioObjectStorageService>();
 
         // Services externes HTTP
         services.AddHttpClient();
         services.AddScoped<IPartenaireService, PartenaireService>();
-        services.AddScoped<ITauxChangeService, TauxChangeService>();
+        // Taux de change en local (table TauxDeChanges + config), plus d'appel au service externe
+        services.AddScoped<ITauxChangeService, LocalTauxChangeService>();
         
         // MassTransit
         services.AddMassTransitWithRabbitMq(config);

@@ -9,7 +9,7 @@ public record PrimeDto
     public Guid AssuranceId { get; init; }
     
     // Taux et valeurs
-    public string? Taux { get; init; }
+    public decimal? Taux { get; init; }
     public decimal ValeurFCFA { get; init; }
     public decimal ValeurDevise { get; init; }
     

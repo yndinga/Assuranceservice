@@ -33,7 +33,7 @@ public class AssuranceProcessCompletedConsumer : IConsumer<AssuranceProcessCompl
             assurance.Statut = context.Message.Statut;
             await _assuranceRepository.UpdateAsync(assurance);
 
-            _logger.LogInformation("Assurance {AssuranceId} process completed with status {Status}", 
+            _logger.LogInformation("Assurance {AssuranceId} process completed with Statut {Statut}", 
                 context.Message.AssuranceId, context.Message.Statut);
         }
         catch (Exception ex)

@@ -1,4 +1,3 @@
-using AssuranceService.Domain.Entities;
 using AssuranceService.Domain.Models;
 using AssuranceService.Domain.Models.Referentiel;
 using Microsoft.EntityFrameworkCore;
@@ -8,10 +7,6 @@ namespace AssuranceService.Infrastructure.Data;
 
 public class AssuranceDbContext : DbContext
 {
-    // Entités simples
-    public DbSet<Policy> Policies => Set<Policy>();
-    public DbSet<Customer> Customers => Set<Customer>();
-
     // Modèles d'assurance
     public DbSet<Assurance> Assurances => Set<Assurance>();
     public DbSet<Marchandise> Marchandises => Set<Marchandise>();
@@ -20,6 +15,7 @@ public class AssuranceDbContext : DbContext
     public DbSet<Cotation> Cotations => Set<Cotation>();
     public DbSet<Voyage> Voyages => Set<Voyage>();
     public DbSet<VisaAssurance> VisaAssurances => Set<VisaAssurance>();
+    public DbSet<Document> Documents => Set<Document>();
 
     // Types de transport (anciens modèles - à migrer vers Voyage)
     public DbSet<Aerien> Aeriens => Set<Aerien>();
@@ -35,12 +31,16 @@ public class AssuranceDbContext : DbContext
     public DbSet<Departement> Departements => Set<Departement>();
     public DbSet<Devise> Devises => Set<Devise>();
     public DbSet<Module> Modules => Set<Module>();
+    public DbSet<Statut> Statuts => Set<Statut>();
     public DbSet<Aeroport> Aeroports => Set<Aeroport>();
     public DbSet<Port> Ports => Set<Port>();
     public DbSet<Corridor> Corridors => Set<Corridor>();
     public DbSet<Route> Routes => Set<Route>();
     public DbSet<Troncon> Troncons => Set<Troncon>();
     public DbSet<TauxDeChange> TauxDeChanges => Set<TauxDeChange>();
+    public DbSet<UniteStatistique> UniteStatistiques => Set<UniteStatistique>();
+    public DbSet<Specificite> Specificites => Set<Specificite>();
+    public DbSet<TypeTransport> TypeTransports => Set<TypeTransport>();
 
     public AssuranceDbContext(DbContextOptions<AssuranceDbContext> options) : base(options) 
     {
@@ -48,10 +48,6 @@ public class AssuranceDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Configuration des entités simples
-        ConfigurePolicy(modelBuilder);
-        ConfigureCustomer(modelBuilder);
-
         // Configuration des modèles d'assurance
         ConfigureAssurance(modelBuilder);
         ConfigureMarchandise(modelBuilder);
@@ -67,37 +63,18 @@ public class AssuranceDbContext : DbContext
 
         // Référentiels
         ConfigurePort(modelBuilder);
-        
+        ConfigureTauxDeChange(modelBuilder);
+        ConfigureSpecificite(modelBuilder);
+        ConfigureTypeTransport(modelBuilder);
+
         // Configuration Voyage et VisaAssurance
         ConfigureVoyage(modelBuilder);
         ConfigureVisaAssurance(modelBuilder);
+        ConfigureDocument(modelBuilder);
 
         // Configuration SAGA
         ConfigureSaga(modelBuilder);
 
-    }
-
-    private void ConfigurePolicy(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Policy>(b =>
-        {
-            b.ToTable("Policies");
-            b.HasKey(p => p.Id);
-            b.Property(p => p.Number).IsRequired().HasMaxLength(50);
-            b.Property(p => p.Premium).HasColumnType("decimal(18,2)");
-            b.HasIndex(p => p.Number).IsUnique();
-        });
-    }
-
-    private void ConfigureCustomer(ModelBuilder modelBuilder)
-    {
-        modelBuilder.Entity<Customer>(b =>
-        {
-            b.ToTable("Customers");
-            b.HasKey(c => c.Id);
-            b.Property(c => c.FullName).IsRequired().HasMaxLength(200);
-            b.Property(c => c.Email).HasMaxLength(255);
-        });
     }
 
     private void ConfigureAssurance(ModelBuilder modelBuilder)
@@ -118,7 +95,8 @@ public class AssuranceDbContext : DbContext
             entity.Property(a => a.ImportateurNIU).HasMaxLength(25);
             entity.Property(a => a.TypeContrat).IsRequired().HasMaxLength(25);
             entity.Property(a => a.Duree).HasMaxLength(25);
-            entity.Property(a => a.Statut).HasMaxLength(25);
+            entity.Property(a => a.Statut).HasMaxLength(10).HasDefaultValue("10");
+            entity.Property(a => a.Module).IsRequired().HasMaxLength(250);
             entity.HasOne(a => a.Garantie)
                   .WithMany()
                   .HasForeignKey(a => a.GarantieId)
@@ -151,6 +129,7 @@ public class AssuranceDbContext : DbContext
             entity.Property(m => m.Description).HasMaxLength(500);
             entity.Property(m => m.ValeurFCFA).HasColumnType("decimal(18,2)");
             entity.Property(m => m.ValeurDevise).HasColumnType("decimal(18,2)");
+            entity.Property(m => m.Devise).HasMaxLength(50);
             entity.Property(m => m.UniteStatistique).HasMaxLength(50);
         });
     }
@@ -161,7 +140,7 @@ public class AssuranceDbContext : DbContext
         {
             entity.ToTable("Primes");
             entity.HasKey(p => p.Id);
-            entity.Property(p => p.Taux).HasMaxLength(255);
+            entity.Property(p => p.Taux).HasPrecision(18, 4);
             entity.Property(p => p.ValeurFCFA).HasColumnType("decimal(18,2)");
             entity.Property(p => p.ValeurDevise).HasColumnType("decimal(18,2)");
             entity.Property(p => p.PrimeNette).HasColumnType("decimal(18,2)");
@@ -179,7 +158,7 @@ public class AssuranceDbContext : DbContext
             entity.ToTable("Garanties");
             entity.HasKey(g => g.Id);
             entity.Property(g => g.Nom).HasColumnName("NomGarantie").IsRequired().HasMaxLength(255);
-            entity.Property(g => g.Taux).HasMaxLength(25);
+            entity.Property(g => g.Taux).HasPrecision(18, 4);
             entity.Property(g => g.Accessoires).HasColumnType("decimal(18,2)");
         });
     }
@@ -285,6 +264,43 @@ public class AssuranceDbContext : DbContext
         });
     }
 
+    private void ConfigureTauxDeChange(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TauxDeChange>(entity =>
+        {
+            entity.ToTable("TauxDeChanges");
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.Source).IsRequired().HasMaxLength(100);
+            entity.Property(t => t.Taux).HasPrecision(20, 5);
+            entity.Property(t => t.ValideDe).HasMaxLength(50);
+            entity.HasOne(t => t.Devise)
+                  .WithMany(d => d.TauxDeChanges)
+                  .HasForeignKey(t => t.DeviseId)
+                  .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    private void ConfigureSpecificite(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Specificite>(entity =>
+        {
+            entity.ToTable("Specificites");
+            entity.HasKey(s => s.Id);
+            entity.Property(s => s.Nom).IsRequired().HasMaxLength(255);
+        });
+    }
+
+    private void ConfigureTypeTransport(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<TypeTransport>(entity =>
+        {
+            entity.ToTable("TypeTransports");
+            entity.HasKey(t => t.Id);
+            entity.Property(t => t.Nom).IsRequired().HasMaxLength(255);
+            entity.Property(t => t.Module).HasMaxLength(50);
+        });
+    }
+
     private void ConfigureVoyage(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Voyage>(entity =>
@@ -298,11 +314,7 @@ public class AssuranceDbContext : DbContext
             entity.Property(v => v.PaysDestination).HasMaxLength(255);
             entity.Property(v => v.LieuSejour).HasMaxLength(255);
             entity.Property(v => v.DureeSejour).HasMaxLength(50);
-
-            entity.HasOne(v => v.Module)
-                  .WithMany()
-                  .HasForeignKey(v => v.ModuleId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(v => v.ModuleCode).IsRequired().HasMaxLength(10);
 
             entity.HasOne(v => v.Assurance)
                   .WithOne(a => a.Voyage)
@@ -326,6 +338,24 @@ public class AssuranceDbContext : DbContext
                   .WithMany(a => a.Visas)
                   .HasForeignKey(v => v.AssuranceId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+
+    private void ConfigureDocument(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Document>(entity =>
+        {
+            entity.ToTable("Documents");
+            entity.HasKey(d => d.Id);
+            entity.Property(d => d.Description).IsRequired().HasMaxLength(255);
+            entity.Property(d => d.DocumentUrl).IsRequired().HasMaxLength(500);
+            entity.Property(d => d.ContentType).HasMaxLength(100);
+            entity.Property(d => d.Taille);
+            entity.HasOne(d => d.Assurance)
+                  .WithMany(a => a.Documents)
+                  .HasForeignKey(d => d.AssuranceId)
+                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(d => d.AssuranceId);
         });
     }
 

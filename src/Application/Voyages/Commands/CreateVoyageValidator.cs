@@ -1,4 +1,3 @@
-using AssuranceService.Application.Common;
 using FluentValidation;
 
 namespace AssuranceService.Application.Voyages.Commands;
@@ -10,24 +9,17 @@ public class CreateVoyageValidator : AbstractValidator<CreateVoyageCommand>
     private static readonly HashSet<string> _codesValides =
         new(StringComparer.OrdinalIgnoreCase) { "MA", "AE", "RO", "FL" };
 
-    public CreateVoyageValidator(IModuleRepository moduleRepository)
+    public CreateVoyageValidator()
     {
         // ── Identifiant assurance ───────────────────────────────────────────
         RuleFor(x => x.AssuranceId)
             .NotEmpty().WithMessage("L'identifiant de l'assurance est requis.");
 
-        // ── Module (type de transport) ───────────────────────────────────────
-        RuleFor(x => x.ModuleId)
-            .NotEmpty().WithMessage("Le module (ModuleId) est requis (MA, AE, RO, FL).");
-
-        RuleFor(x => x.ModuleId)
-            .MustAsync(async (id, ct) =>
-            {
-                var m = await moduleRepository.GetByIdAsync(id, ct);
-                return m != null && _codesValides.Contains(m.Code?.Trim() ?? string.Empty);
-            })
-            .WithMessage("Module invalide ou inconnu. Valeurs acceptées : MA (Maritime), AE (Aérien), RO (Routier), FL (Fluvial).")
-            .When(x => x.ModuleId != Guid.Empty);
+        // ── Module (type de transport) : code MA, AE, RO, FL ─────────────────
+        RuleFor(x => x.ModuleCode)
+            .NotEmpty().WithMessage("Le code module est requis (MA, AE, RO, FL).")
+            .Must(code => _codesValides.Contains(code?.Trim() ?? string.Empty))
+            .WithMessage("Module invalide. Valeurs acceptées : MA (Maritime), AE (Aérien), RO (Routier), FL (Fluvial).");
 
         // ── Transporteur ────────────────────────────────────────────────────
         RuleFor(x => x.NomTransporteur)
@@ -56,7 +48,7 @@ public class CreateVoyageValidator : AbstractValidator<CreateVoyageCommand>
             .Must(v => !IsPlaceholder(v)).WithMessage("Veuillez fournir un pays de destination réel.")
             .MaximumLength(250);
 
-        // ── Séjour (optionnel, non stocké en base) ───────────────────────────
+        // ── Séjour : défini par l'importateur, optionnel (peut être null) ──────
         RuleFor(x => x.LieuSejour)
             .Must(v => !IsPlaceholder(v)).WithMessage("Veuillez fournir un lieu de séjour réel.")
             .MaximumLength(255)
@@ -70,43 +62,40 @@ public class CreateVoyageValidator : AbstractValidator<CreateVoyageCommand>
         // ── Maritime (MA) : ports (référentiel Ports) requis ─────────────────
         RuleFor(x => x.PortEmbarquementId)
             .NotEmpty().WithMessage("Le port d'embarquement (PortEmbarquementId) est requis pour un transport Maritime.")
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "MA", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "MA"));
 
         RuleFor(x => x.PortDebarquementId)
             .NotEmpty().WithMessage("Le port de débarquement (PortDebarquementId) est requis pour un transport Maritime.")
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "MA", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "MA"));
 
         // ── Aérien (AE) : aéroports requis ──────────────────────────────────
         RuleFor(x => x.AeroportEmbarquement)
             .NotEmpty().WithMessage("L'aéroport d'embarquement est requis pour un transport Aérien.")
             .Must(v => !IsPlaceholder(v)).WithMessage("Veuillez fournir un aéroport d'embarquement réel.")
             .MaximumLength(255)
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "AE", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "AE"));
 
         RuleFor(x => x.AeroportDebarquement)
             .NotEmpty().WithMessage("L'aéroport de débarquement est requis pour un transport Aérien.")
             .Must(v => !IsPlaceholder(v)).WithMessage("Veuillez fournir un aéroport de débarquement réel.")
             .MaximumLength(255)
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "AE", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "AE"));
 
         // ── Routier (RO) : route nationale requise ───────────────────────────
         RuleFor(x => x.RouteNationale)
             .NotEmpty().WithMessage("La route nationale est requise pour un transport Routier.")
             .Must(v => !IsPlaceholder(v)).WithMessage("Veuillez fournir une route nationale réelle.")
             .MaximumLength(255)
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "RO", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "RO"));
 
         // ── Fluvial (FL) : port d'embarquement requis (référentiel Ports) ────
         RuleFor(x => x.PortEmbarquementId)
             .NotEmpty().WithMessage("Le port d'embarquement (PortEmbarquementId) est requis pour un transport Fluvial.")
-            .WhenAsync(async (x, ct) => await ModuleCodeIsAsync(moduleRepository, x.ModuleId, "FL", ct));
+            .When(x => IsModuleCode(x.ModuleCode, "FL"));
     }
 
-    private static async Task<bool> ModuleCodeIsAsync(IModuleRepository moduleRepository, Guid moduleId, string code, CancellationToken ct)
-    {
-        var m = await moduleRepository.GetByIdAsync(moduleId, ct);
-        return string.Equals(m?.Code?.Trim(), code, StringComparison.OrdinalIgnoreCase);
-    }
+    private static bool IsModuleCode(string? moduleCode, string code) =>
+        string.Equals(moduleCode?.Trim(), code, StringComparison.OrdinalIgnoreCase);
 
     private static bool IsPlaceholder(string? v) =>
         string.Equals(v, Placeholder, StringComparison.OrdinalIgnoreCase);

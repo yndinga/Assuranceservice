@@ -33,8 +33,14 @@ namespace AssuranceService.Domain.Models
         [Column(TypeName = "nvarchar(250)")] 
         public string? Duree { get; set; }
 
-        [Column(TypeName = "nvarchar(250)")] 
-        public string Statut { get; set; } = "EnAttente";
+        /// <summary>Code statut (référentiel Statuts). Défaut : 10 = Elaboré.</summary>
+        [Column(TypeName = "nvarchar(10)")]
+        [MaxLength(10)]
+        public string Statut { get; set; } = "10";
+
+        [Column(TypeName = "nvarchar(250)")]
+        public string Module { get; set; } = string.Empty;
+
         public Guid? GarantieId { get; set; }
         public virtual Garantie? Garantie { get; set; }
         public Guid? AssureurId { get; set; }
@@ -45,6 +51,7 @@ namespace AssuranceService.Domain.Models
         public virtual ICollection<Marchandise> Marchandises { get; set; } = new List<Marchandise>();
         public virtual ICollection<Prime> Primes { get; set; } = new List<Prime>();
         public virtual ICollection<VisaAssurance> Visas { get; set; } = new List<VisaAssurance>();
+        public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
         public virtual Voyage? Voyage { get; set; }
     }
 }

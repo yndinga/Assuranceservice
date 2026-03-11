@@ -15,8 +15,8 @@ namespace AssuranceService.Domain.Models
         [MaxLength(255)]
         public string Nom { get; set; } = string.Empty;
 
-        [MaxLength(25)]
-        public string? Taux { get; set; }
+        [Column(TypeName = "decimal(18,4)")]
+        public decimal? Taux { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]

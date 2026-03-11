@@ -15,7 +15,7 @@ public record MarchandiseDto
     public string? Description { get; init; }
     public decimal ValeurFCFA { get; init; }
     public decimal? ValeurDevise { get; init; }
-    public string? Devise { get; init; }
+    public string Devise { get; init; } = string.Empty;
     public string? MasseBrute { get; init; }
     public string? UniteStatistique { get; init; }
     public string? Marque { get; init; }

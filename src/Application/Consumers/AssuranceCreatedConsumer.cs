@@ -1,4 +1,5 @@
 using MassTransit;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Events;
 using AssuranceService.Application.Common;
 using Microsoft.Extensions.Logging;
@@ -30,7 +31,7 @@ public class AssuranceCreatedConsumer : IConsumer<AssuranceCreatedEvent>
             }
 
             // Mettre à jour le statut de l'assurance
-            assurance.Statut = "Created";
+            assurance.Statut = StatutAssuranceCodes.Elaboré;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogInformation("Assurance {AssuranceId} status updated to Created", context.Message.AssuranceId);

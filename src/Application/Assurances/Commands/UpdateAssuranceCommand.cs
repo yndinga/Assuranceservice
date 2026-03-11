@@ -12,7 +12,8 @@ public record UpdateAssuranceCommand : IRequest<Unit>
     public DateTime? DateFin { get; init; }
     public string TypeContrat { get; init; } = string.Empty;
     public string? Duree { get; init; }
-    public string Statut { get; init; } = string.Empty;
+    public string Statut { get; init; } = "10";
+    public string Module { get; init; } = string.Empty;
     public Guid? AssureurId { get; init; }
     public Guid? IntermediaireId { get; init; }
     public Guid? GarantieId { get; init; }

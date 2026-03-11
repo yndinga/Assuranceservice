@@ -22,8 +22,9 @@ public record AssuranceDto
     // Contrat
     public string TypeContrat { get; init; } = string.Empty;
     public string? Duree { get; init; }
-    public string Statut { get; init; } = string.Empty;
-    
+    public string Statut { get; init; } = "10";
+    public string Module { get; init; } = string.Empty;
+
     public Guid? GarantieId { get; init; }
     public string? GarantieNom { get; init; }
     

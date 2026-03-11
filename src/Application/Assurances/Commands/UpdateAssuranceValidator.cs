@@ -17,8 +17,8 @@ public class UpdateAssuranceValidator : AbstractValidator<UpdateAssuranceCommand
             .NotEmpty().WithMessage("Le type de contrat est requis.")
             .MaximumLength(250);
 
-        RuleFor(x => x.Statut)
-            .NotEmpty().WithMessage("Le statut est requis.")
+        RuleFor(x => x.Module)
+            .NotEmpty().WithMessage("Le module est requis.")
             .MaximumLength(250);
 
         RuleFor(x => x.NoPolice)

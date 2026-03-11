@@ -4,7 +4,7 @@ namespace AssuranceService.Application.Primes.Commands;
 
 public record CreatePrimeCommand : IRequest<Guid>
 {
-    public string? Taux { get; init; }
+    public decimal? Taux { get; init; }
     public decimal ValeurFCFA { get; init; }
     public decimal ValeurDevise { get; init; }
     public decimal? PrimeNette { get; init; }

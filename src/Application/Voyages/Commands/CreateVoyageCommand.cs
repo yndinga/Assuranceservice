@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MediatR;
 
 namespace AssuranceService.Application.Voyages.Commands;
@@ -6,7 +7,9 @@ public record CreateVoyageCommand : IRequest<Guid>
 {
     public Guid AssuranceId { get; init; }
 
-    public Guid ModuleId { get; init; }
+    /// <summary>Code du type de transport (code uniquement, pas d'ID) : MA, AE, RO, FL.</summary>
+    [JsonPropertyName("moduleCode")]
+    public string ModuleCode { get; init; } = string.Empty;
 
     // Informations transporteur
     public string NomTransporteur { get; init; } = string.Empty;
@@ -17,7 +20,7 @@ public record CreateVoyageCommand : IRequest<Guid>
     public string PaysProvenance { get; init; } = string.Empty;
     public string PaysDestination { get; init; } = string.Empty;
 
-    // Séjour (informationnel, non stocké en base)
+    // Séjour : défini par l'importateur, peut être null
     public string? LieuSejour { get; init; }
     public string? DureeSejour { get; init; }
 

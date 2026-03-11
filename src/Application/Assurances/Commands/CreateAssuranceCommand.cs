@@ -11,7 +11,8 @@ public record CreateAssuranceCommand : IRequest<Guid>
     public DateTime? DateFin { get; init; }
     public string TypeContrat { get; init; } = string.Empty;
     public string? Duree { get; init; }
-    // Statut géré par le système — toujours "Elaborer" à la création
+    /// <summary>Code module (ex: MA, AE, RO, FL). Obligatoire.</summary>
+    public string Module { get; init; } = string.Empty;
     public Guid? AssureurId { get; init; }
     public Guid? IntermediaireId { get; init; }
     public Guid? GarantieId { get; init; }

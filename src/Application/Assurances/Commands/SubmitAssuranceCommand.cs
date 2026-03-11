@@ -3,18 +3,18 @@ using MediatR;
 namespace AssuranceService.Application.Assurances.Commands;
 
 /// <summary>
-/// Commande pour soumettre une assurance (Étape 4)
+/// Commande pour soumettre une assurance (Étape 4).
+/// Prérequis : l'assurance doit avoir au moins un voyage, une marchandise et un document.
+/// AssureurId doit déjà être renseigné (saisi à la création ou via ChoisirAssureur par l'intermédiaire).
 /// - Génère NoPolice et NumeroCert
 /// - Calcule la prime
-/// - Change le statut à "VisaDemandé"
+/// - Change le statut à 11 (Visa demandé)
 /// </summary>
 public record SubmitAssuranceCommand : IRequest<SubmitAssuranceResponse>
 {
     public Guid AssuranceId { get; init; }
     // GarantieId lu depuis Assurance.GarantieId (sauvegardé à la création)
-    // Devise lue automatiquement depuis les marchandises (Marchandise.Devise)
-    // Requis quand l'assurance a été envoyée à un intermédiaire (il a choisi l'assureur)
-    public Guid? PartenaireId { get; init; }
+    // Devise lue depuis les marchandises. AssureurId lu depuis l'assurance (création directe ou ChoisirAssureur).
 }
 
 public record SubmitAssuranceResponse
@@ -27,7 +27,7 @@ public record SubmitAssuranceResponse
     public decimal Accessoires { get; init; }
     public decimal Taxe { get; init; }
     public decimal PrimeTotale { get; init; }
-    public string Statut { get; init; } = string.Empty;
+    public string Statut { get; init; } = "10";
 }
 
 

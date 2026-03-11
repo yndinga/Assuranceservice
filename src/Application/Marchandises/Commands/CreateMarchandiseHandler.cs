@@ -30,17 +30,16 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
 
     public async Task<Guid> Handle(CreateMarchandiseCommand request, CancellationToken cancellationToken)
     {
-        // Vérifier que l'assurance existe
-        var assurance = await _assuranceRepository.GetByIdAsync(request.AssuranceId);
+        // Vérifier que l'assurance existe (chargement minimal sans Voyage)
+        var assurance = await _assuranceRepository.GetByIdMinimalAsync(request.AssuranceId);
         if (assurance == null)
         {
             throw new ArgumentException($"Assurance with ID {request.AssuranceId} not found.");
         }
 
-        // Vérifier que l'assurance est au statut "Elaborer"
-        if (assurance.Statut != "Elaborer")
+        if (assurance.Statut != AssuranceService.Domain.Constants.StatutAssuranceCodes.Elaboré)
         {
-            throw new InvalidOperationException($"Impossible d'ajouter une marchandise. L'assurance doit être au statut 'Elaborer'. Statut actuel: {assurance.Statut}");
+            throw new InvalidOperationException($"Impossible d'ajouter une marchandise. L'assurance doit être au statut Elaboré (10). Statut actuel: {assurance.Statut}");
         }
 
         var marchandise = new Marchandise
@@ -53,7 +52,7 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
             AssuranceId = request.AssuranceId,
             ValeurFCFA = request.Valeur,
             ValeurDevise = request.ValeurDevise,
-            Devise = request.Devise ?? "XOF",
+            Devise = request.Devise,
             MasseBrute = request.MasseBrute,
             UniteStatistique = request.UniteStatistique ?? string.Empty,
             Marque = request.Marque,
@@ -64,13 +63,9 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
 
         var createdMarchandise = await _marchandiseRepository.CreateAsync(marchandise);
 
-        // Recalculer et enregistrer la Prime (formule : ValeurFCFA = ValeurDevise × TauxChange, PrimeNette = ValeurFCFA × Taux, Taxe 15%, PrimeTotale = PrimeNette + Taxe + Accessoires)
         var marchandises = await _marchandiseRepository.GetByAssuranceIdAsync(request.AssuranceId);
         var valeurTotaleDevise = marchandises.Sum(m => m.ValeurDevise ?? 0);
-        var devise = marchandises
-            .Where(m => !string.IsNullOrWhiteSpace(m.Devise))
-            .Select(m => m.Devise)
-            .FirstOrDefault() ?? "XOF";
+        var deviseCode = request.Devise ?? "XOF";
 
         if (valeurTotaleDevise > 0 && assurance.GarantieId.HasValue)
         {
@@ -79,7 +74,7 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
                 AssuranceId = request.AssuranceId,
                 GarantieId = assurance.GarantieId.Value,
                 ValeurDevise = valeurTotaleDevise,
-                Devise = devise
+                Devise = deviseCode
             });
 
             var existingPrimes = await _primeRepository.GetByAssuranceIdAsync(request.AssuranceId);
@@ -87,7 +82,7 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
 
             if (existingPrime != null)
             {
-                existingPrime.Taux = primeCalculation.Taux.ToString();
+                existingPrime.Taux = primeCalculation.Taux;
                 existingPrime.ValeurFCFA = primeCalculation.ValeurFCFA;
                 existingPrime.ValeurDevise = valeurTotaleDevise;
                 existingPrime.PrimeNette = primeCalculation.PrimeNette;
@@ -103,7 +98,7 @@ public class CreateMarchandiseHandler : IRequestHandler<CreateMarchandiseCommand
                 var prime = new Prime
                 {
                     AssuranceId = request.AssuranceId,
-                    Taux = primeCalculation.Taux.ToString(),
+                    Taux = primeCalculation.Taux,
                     ValeurFCFA = primeCalculation.ValeurFCFA,
                     ValeurDevise = valeurTotaleDevise,
                     PrimeNette = primeCalculation.PrimeNette,

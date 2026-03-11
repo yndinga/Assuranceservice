@@ -1,4 +1,5 @@
 using MassTransit;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Events;
 using AssuranceService.Application.Common;
 using Microsoft.Extensions.Logging;
@@ -31,7 +32,7 @@ public class AssuranceProcessFailedConsumer : IConsumer<AssuranceProcessFailedEv
             }
 
             // Mettre à jour le statut de l'assurance en échec
-            assurance.Statut = "Failed";
+            assurance.Statut = StatutAssuranceCodes.ModificationDemandée;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogError("Assurance {AssuranceId} process failed: {ErrorMessage} (Code: {ErrorCode})", 

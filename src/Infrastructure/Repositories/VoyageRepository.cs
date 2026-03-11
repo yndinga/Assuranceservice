@@ -26,7 +26,6 @@ public class VoyageRepository : IVoyageRepository
     public async Task<Voyage?> GetByIdAsync(Guid id)
     {
         return await _context.Voyages
-            .Include(v => v.Module)
             .Include(v => v.Maritime!)
                 .ThenInclude(m => m.PortEmbarquement)
             .Include(v => v.Maritime!)
@@ -43,7 +42,6 @@ public class VoyageRepository : IVoyageRepository
     public async Task<IEnumerable<Voyage>> GetByAssuranceIdAsync(Guid assuranceId)
     {
         return await _context.Voyages
-            .Include(v => v.Module)
             .Include(v => v.Maritime!)
                 .ThenInclude(m => m.PortEmbarquement)
             .Include(v => v.Maritime!)
@@ -61,7 +59,6 @@ public class VoyageRepository : IVoyageRepository
     public async Task<IEnumerable<Voyage>> GetAllAsync()
     {
         return await _context.Voyages
-            .Include(v => v.Module)
             .Include(v => v.Maritime!)
                 .ThenInclude(m => m.PortEmbarquement)
             .Include(v => v.Maritime!)

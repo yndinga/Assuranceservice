@@ -1,5 +1,6 @@
 using AssuranceService.Application.Common;
 using AssuranceService.Application.Services;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Models;
 using AssuranceService.Domain.Events;
 using MediatR;
@@ -37,7 +38,8 @@ public class CreateAssuranceHandler : IRequestHandler<CreateAssuranceCommand, Gu
             DateFin = request.DateFin,
             TypeContrat = request.TypeContrat,
             Duree = request.Duree,
-            Statut = "Elaborer",
+            Statut = StatutAssuranceCodes.Elaboré,
+            Module = request.Module,
             GarantieId = request.GarantieId,
             AssureurId = request.AssureurId,
             IntermediaireId = request.IntermediaireId,

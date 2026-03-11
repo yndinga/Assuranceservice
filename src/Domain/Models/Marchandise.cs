@@ -39,6 +39,8 @@ namespace AssuranceService.Domain.Models
         public decimal ValeurFCFA { get; set; }
         [Column(TypeName = "decimal(18,2)")]
         public decimal? ValeurDevise { get; set; }
+        /// <summary>Code devise (ex: XOF, EUR). Colonne en base : Devise.</summary>
+        [Column("Devise")]
         [MaxLength(50)]
         public string Devise { get; set; } = string.Empty;
         // Informations complémentaires

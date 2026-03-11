@@ -21,8 +21,15 @@ public class AssuranceRepository : IAssuranceRepository
             .Include(a => a.Marchandises)
             .Include(a => a.Primes)
             .Include(a => a.Visas)
-            .Include(a => a.Voyage!)
-                .ThenInclude(v => v.Module)
+            .Include(a => a.Voyage)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
+
+    public async Task<Assurance?> GetByIdMinimalAsync(Guid id)
+    {
+        return await _context.Assurances
+            .Include(a => a.Garantie)
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
@@ -41,6 +48,64 @@ public class AssuranceRepository : IAssuranceRepository
             .Include(a => a.Garantie)
             .Include(a => a.Marchandises)
             .Include(a => a.Primes)
+            .ToListAsync();
+    }
+
+    public async Task<(IEnumerable<Assurance> Items, int TotalCount)> GetPagedAsync(string? search, int page, int perPage, string? ocre, Guid? intermediaireId, Guid? assureurId)
+    {
+        var query = _context.Assurances.AsNoTracking();
+
+        // Filtres rôle (comme Laravel) : un seul appliqué, sinon admin = tout
+        if (!string.IsNullOrWhiteSpace(ocre))
+            query = query.Where(a => a.OCRE == ocre);
+        else if (intermediaireId.HasValue)
+            query = query.Where(a => a.IntermediaireId == intermediaireId.Value);
+        else if (assureurId.HasValue)
+            query = query.Where(a => a.AssureurId == assureurId.Value);
+
+        // Recherche : Nom (ImportateurNom), NIU, NoPolice, NumeroCert
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = search.Trim();
+            query = query.Where(a =>
+                (a.ImportateurNom != null && a.ImportateurNom.Contains(term)) ||
+                (a.ImportateurNIU != null && a.ImportateurNIU.Contains(term)) ||
+                (a.NoPolice != null && a.NoPolice.Contains(term)) ||
+                (a.NumeroCert != null && a.NumeroCert.Contains(term)));
+        }
+
+        query = query.OrderByDescending(a => a.ModifierLe);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Include(a => a.Garantie)
+            .Skip((page - 1) * perPage)
+            .Take(perPage)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
+    public async Task<IEnumerable<Assurance>> GetByAssureurIdAsync(Guid assureurId)
+    {
+        return await _context.Assurances
+            .Include(a => a.Garantie)
+            .Include(a => a.Marchandises)
+            .Include(a => a.Primes)
+            .Where(a => a.AssureurId == assureurId)
+            .OrderByDescending(a => a.ModifierLe)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<Assurance>> GetByIntermediaireIdAsync(Guid intermediaireId)
+    {
+        return await _context.Assurances
+            .Include(a => a.Garantie)
+            .Include(a => a.Marchandises)
+            .Include(a => a.Primes)
+            .Where(a => a.IntermediaireId == intermediaireId)
+            .OrderByDescending(a => a.ModifierLe)
             .ToListAsync();
     }
 
