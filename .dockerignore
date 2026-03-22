@@ -1,0 +1,27 @@
+# Build / IDE
+**/bin/
+**/obj/
+**/out/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/*.user
+**/*.suo
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Docs & misc
+*.md
+!README.md
+**/node_modules/
+
+# Tests (si ajoutés plus tard)
+**/TestResults/
+**/*Tests/

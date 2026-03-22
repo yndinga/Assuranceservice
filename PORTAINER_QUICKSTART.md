@@ -4,24 +4,56 @@ Guide ultra-rapide pour déployer **AssuranceService** dans Portainer avec Postg
 
 ---
 
-## 🐳 Publier l'image sur GHCR (pour que Portainer voie l'image)
+## 🐳 Build image → GitHub (GHCR) → Portainer
 
-L'image `ghcr.io/yndinga/assuranceservice:v1.0.0` est construite et poussée par **GitHub Actions**.
+L’image est construite et poussée automatiquement sur **GitHub Container Registry** par le workflow `.github/workflows/docker-publish-ghcr.yml`.
 
-- **Première fois** : poussez le workflow et créez un tag pour publier la version `v1.0.0` :
-  ```powershell
-  git tag v1.0.0
-  git push origin v1.0.0
-  ```
-  Le workflow `.github/workflows/docker-publish-ghcr.yml` va builder et pousser l'image sur GHCR.
+### 1. Pousser le code sur GitHub
 
-- **Ensuite** : chaque push sur `master` publie aussi le tag `latest`. Pour une nouvelle version (ex. v1.0.1) :
-  ```powershell
-  git tag v1.0.1
-  git push origin v1.0.1
-  ```
+```powershell
+git add -A
+git commit -m "Votre message"
+git push origin master
+```
 
-Une fois l'image sur GHCR, la stack Portainer peut la récupérer sans erreur « manifest unknown ».
+Dès que le push est fait sur `master` (ou `main`), GitHub Actions :
+- build l’image Docker à partir de `src/Api/Dockerfile`
+- pousse l’image vers `ghcr.io/<votre-compte>/assuranceservice:latest` (et tag `master`)
+
+### 2. (Optionnel) Créer une version pour Portainer
+
+Pour une version figée (ex. v1.1.0) :
+
+```powershell
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+L’image sera aussi disponible en `ghcr.io/<votre-compte>/assuranceservice:v1.1.0`.
+
+### 3. Déployer dans Portainer
+
+- **Stacks** → **Add stack** (ou **Git repository** avec `portainer-stack.yml`).
+- La stack utilise par défaut : `ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-v1.1.0}`.
+- Si votre compte GitHub est `yndinga`, l’image est bien `ghcr.io/yndinga/assuranceservice`. Sinon, adaptez `portainer-stack.yml` avec votre image GHCR.
+- Variable d’environnement optionnelle : `IMAGE_TAG=latest` ou `IMAGE_TAG=v1.1.0` pour choisir le tag.
+
+Une fois l’image sur GHCR, Portainer peut la récupérer sans erreur « manifest unknown ».
+
+### Build local (test avant push)
+
+Pour vérifier que l’image se construit correctement avant de pousser sur GitHub :
+
+```powershell
+cd D:\dev_netcore\microservice\AssuranceService
+docker build -t ghcr.io/yndinga/assuranceservice:latest -f src/Api/Dockerfile .
+```
+
+Puis pour pousser cette image vers GHCR à la main (après `docker login ghcr.io` avec un PAT) :
+
+```powershell
+docker push ghcr.io/yndinga/assuranceservice:latest
+```
 
 ---
 
@@ -231,9 +263,34 @@ ports:
 
 ---
 
+## 💾 Backup des données pour Portainer
+
+Pour sauvegarder la base **MS_ASSURANCE** (SQL Server) et la restaurer côté Portainer :
+
+1. **Sauvegarde** (sur la machine source) :
+   - **Dans SSMS** : ouvrez `scripts/Backup-AssuranceDatabase.sql`, modifiez le chemin du `.bak` (ex. `N'C:\backup\MS_ASSURANCE.bak'`), exécutez (F5). Le `.bak` est créé.
+   - **Dans PowerShell** :
+   ```powershell
+   cd scripts
+   .\Backup-AssuranceDatabase.ps1 -ConnectionString "Server=...;User Id=sa;Password=...;TrustServerCertificate=True;" -BackupPathOnServer "C:\backup\MS_ASSURANCE.bak"
+   ```
+   Si SQL Server est dans Docker, montez un volume (ex. `-v ./backup:/var/opt/mssql/backup`) et utilisez `-BackupPathOnServer "/var/opt/mssql/backup/MS_ASSURANCE.bak"`.
+
+2. **Copiez** le fichier `.bak` vers le serveur Portainer (ou le serveur SQL cible).
+
+3. **Restauration** (sur le serveur cible) :
+   ```powershell
+   .\Restore-AssuranceDatabase.ps1 -BackupPathOnServer "C:\backup\MS_ASSURANCE.bak" -ConnectionString "Server=192.168.3.178,1434;..."
+   ```
+
+Détails : [scripts/README_Backup_Restore.md](./scripts/README_Backup_Restore.md)
+
+---
+
 ## 📖 Documentation Complète
 
 Pour plus de détails, consultez :
+- [Backup / Restore vers Portainer](./scripts/README_Backup_Restore.md)
 - [Guide Complet Portainer](./DEPLOIEMENT_PORTAINER_POSTGRESQL.md)
 - [README PostgreSQL](./README_POSTGRESQL.md)
 - [Migration SQL Server → PostgreSQL](./MIGRATION_POSTGRESQL.md)

@@ -1,33 +1,20 @@
-# Aligné sur la structure du service DeclarationImportationService
-version: '3.9'
-
+# Exemple local : docker compose up --build
 services:
-  assuranceservice:
-    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-v1.1.0}
-    container_name: assuranceservice
+  assurance-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: assurance-service:local
     ports:
-      - "${API_PORT:-8087}:8080"
+      - "8087:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
-      - DOTNET_CLI_TELEMETRY_OPTOUT=1
-      - ASPNETCORE_URLS=http://+:8080
-      - ConnectionStrings__AssuranceConnection=${SQL_CONNECTION_STRING:-Server=192.168.3.178,1434;Database=MS_ASSURANCE;User ID=sa;Password=MonMotDePasseFort!;Connect Timeout=30;Encrypt=False;Trust Server Certificate=True;}
-      - ApplyMigrationsAtStartup=${ApplyMigrationsAtStartup:-true}
-      - RabbitMQ__Enabled=${RabbitMQ__Enabled:-false}
-      - Consul__Host=${CONSUL_HOST:-host.docker.internal}
-      - Consul__Port=8500
-      - Consul__ServiceName=AssuranceService
-      - Consul__ServiceId=assurance-service-1
-      - Consul__ServiceAddress=${CONSUL_SERVICE_ADDRESS:-192.168.2.89}
-      - Consul__ServicePort=8087
-      - Consul__HealthCheckPath=/health
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-      - "sqlserver:host-gateway"
-    restart: unless-stopped
-    networks:
-      - assurance-network
-
-networks:
-  assurance-network:
-    driver: bridge
+      ASPNETCORE_ENVIRONMENT: Development
+      # Chaîne SQL : adapter host/port (ex. host.docker.internal pour SQL sur la machine hôte Windows/Mac)
+      ConnectionStrings__AssuranceConnection: "Server=host.docker.internal,1433;Database=MS_ASSURANCE;User Id=sa;Password=YourPassword;TrustServerCertificate=True;"
+      # Désactiver migrations au démarrage si la base n’est pas joignable depuis le conteneur
+      # ApplyMigrationsAtStartup: "false"
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3
