@@ -19,7 +19,15 @@ public static class DatabaseMigrationsExtensions
         var config = app.Configuration;
         if (string.Equals(config["ApplyMigrationsAtStartup"], "false", StringComparison.OrdinalIgnoreCase))
         {
-            app.Logger.LogInformation("[Démarrage] ApplyMigrationsAtStartup=false : pas de création de base ni de tables.");
+            app.Logger.LogInformation("[Démarrage] ApplyMigrationsAtStartup=false : migrations désactivées, vérification minimale de la table [Assurances].");
+            using var scope = app.Services.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<AssuranceService.Infrastructure.Data.AssuranceDbContext>();
+            if (!await AssurancesTableExistsAsync(context, cancellationToken))
+            {
+                await EnsureAssurancesTableAsync(context, cancellationToken);
+                await EnsureTransportTablesAsync(context, cancellationToken);
+                app.Logger.LogInformation("[Démarrage] Table [Assurances] créée (mode minimal).");
+            }
             return;
         }
 
@@ -59,7 +67,8 @@ public static class DatabaseMigrationsExtensions
                             "[Démarrage] Table métier [Assurances] absente alors que {Count} migration(s) sont en attente. " +
                             "Création du schéma depuis le modèle actuel (EnsureCreated) puis enregistrement de toutes les migrations connues d'EF dans __EFMigrationsHistory.",
                             pendingList.Count);
-                        await context.Database.EnsureCreatedAsync(cancellationToken);
+                        await EnsureAssurancesTableAsync(context, cancellationToken);
+                        await EnsureTransportTablesAsync(context, cancellationToken);
                         await EnsureMigrationsHistoryTableAsync(context, cancellationToken);
                         await MarkAllEfMigrationsAsAppliedAsync(context, logger, cancellationToken);
                         logger.LogInformation("[Démarrage] Schéma et historique des migrations synchronisés avec le modèle EF.");
@@ -84,10 +93,24 @@ public static class DatabaseMigrationsExtensions
                 if (!historyExists)
                 {
                     logger.LogInformation("[Démarrage] Aucune table d'historique : création des tables au démarrage (EnsureCreated).");
-                    await context.Database.EnsureCreatedAsync(cancellationToken);
+                    await EnsureAssurancesTableAsync(context, cancellationToken);
+                    await EnsureTransportTablesAsync(context, cancellationToken);
                     await EnsureMigrationsHistoryTableAsync(context, cancellationToken);
                     await MarkAllEfMigrationsAsAppliedAsync(context, logger, cancellationToken);
                     logger.LogInformation("[Démarrage] Tables créées et toutes les migrations EF enregistrées dans l'historique.");
+                    return;
+                }
+
+                // Auto-réparation : historique EF présent mais table métier absente (ex: suppression manuelle)
+                if (!await AssurancesTableExistsAsync(context, cancellationToken))
+                {
+                    logger.LogWarning(
+                        "[Démarrage] Historique EF présent mais table [Assurances] absente. " +
+                        "Recréation du schéma via EnsureCreated puis resynchronisation de l'historique.");
+                    await context.Database.EnsureCreatedAsync(cancellationToken);
+                    await EnsureMigrationsHistoryTableAsync(context, cancellationToken);
+                    await MarkAllEfMigrationsAsAppliedAsync(context, logger, cancellationToken);
+                    logger.LogInformation("[Démarrage] Schéma recréé et historique EF resynchronisé.");
                     return;
                 }
 
@@ -271,6 +294,144 @@ public static class DatabaseMigrationsExtensions
         {
             return false;
         }
+    }
+
+    /// <summary>
+    /// Crée la table Assurances si absente (cas base partiellement initialisée).
+    /// </summary>
+    private static async Task EnsureAssurancesTableAsync(DbContext context, CancellationToken cancellationToken)
+    {
+        await context.Database.ExecuteSqlRawAsync("""
+            IF OBJECT_ID(N'[dbo].[Assurances]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[Assurances](
+                    [Id] uniqueidentifier NOT NULL,
+                    [NoPolice] nvarchar(255) NULL,
+                    [NumeroCert] nvarchar(25) NULL,
+                    [ImportateurNom] nvarchar(250) NOT NULL,
+                    [ImportateurNIU] nvarchar(250) NOT NULL,
+                    [DateDebut] datetime2 NULL,
+                    [DateFin] datetime2 NULL,
+                    [TypeContrat] nvarchar(250) NOT NULL,
+                    [Duree] nvarchar(250) NULL,
+                    [Statut] nvarchar(10) NOT NULL CONSTRAINT [DF_Assurances_Statut] DEFAULT N'10',
+                    [Module] nvarchar(250) NOT NULL,
+                    [GarantieId] uniqueidentifier NULL,
+                    [AssureurId] uniqueidentifier NULL,
+                    [IntermediaireId] uniqueidentifier NULL,
+                    [OCRE] nvarchar(250) NOT NULL,
+                    [Designation] nvarchar(255) NULL,
+                    [Nature] nvarchar(500) NULL,
+                    [Specificites] nvarchar(100) NULL,
+                    [Conditionnement] nvarchar(500) NULL,
+                    [Description] nvarchar(500) NULL,
+                    [Devise] nvarchar(50) NULL,
+                    [MasseBrute] nvarchar(255) NULL,
+                    [UniteStatistique] nvarchar(255) NULL,
+                    [Marque] nvarchar(255) NULL,
+                    [NomTransporteur] nvarchar(255) NULL,
+                    [NomNavire] nvarchar(255) NULL,
+                    [TypeNavire] nvarchar(100) NULL,
+                    [LieuSejour] nvarchar(255) NULL,
+                    [DureeSejour] nvarchar(50) NULL,
+                    [PaysProvenance] nvarchar(255) NULL,
+                    [PaysDestination] nvarchar(255) NULL,
+                    [CreerPar] nvarchar(max) NULL,
+                    [ModifierPar] nvarchar(max) NULL,
+                    [CreerLe] datetime2 NOT NULL,
+                    [ModifierLe] datetime2 NULL,
+                    CONSTRAINT [PK_Assurances] PRIMARY KEY ([Id])
+                );
+
+                CREATE UNIQUE INDEX [IX_Assurances_NoPolice] ON [dbo].[Assurances]([NoPolice]) WHERE [NoPolice] IS NOT NULL;
+                CREATE UNIQUE INDEX [IX_Assurances_NumeroCert] ON [dbo].[Assurances]([NumeroCert]) WHERE [NumeroCert] IS NOT NULL;
+
+                IF OBJECT_ID(N'[dbo].[Garanties]', N'U') IS NOT NULL
+                BEGIN
+                    ALTER TABLE [dbo].[Assurances] WITH CHECK
+                    ADD CONSTRAINT [FK_Assurances_Garanties_GarantieId]
+                    FOREIGN KEY([GarantieId]) REFERENCES [dbo].[Garanties]([Id]);
+                END
+            END
+            """, cancellationToken);
+    }
+
+    /// <summary>
+    /// Crée les tables de transport liées à Assurance si absentes.
+    /// </summary>
+    private static async Task EnsureTransportTablesAsync(DbContext context, CancellationToken cancellationToken)
+    {
+        await context.Database.ExecuteSqlRawAsync("""
+            IF OBJECT_ID(N'[dbo].[Assurances]', N'U') IS NULL
+                RETURN;
+
+            IF OBJECT_ID(N'[dbo].[Aeriens]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[Aeriens](
+                    [Id] uniqueidentifier NOT NULL,
+                    [AeroportEmbarquement] nvarchar(255) NOT NULL,
+                    [AeroportDebarquement] nvarchar(255) NULL,
+                    [AssuranceId] uniqueidentifier NOT NULL,
+                    [CreerPar] nvarchar(max) NULL,
+                    [ModifierPar] nvarchar(max) NULL,
+                    [CreerLe] datetime2 NOT NULL,
+                    [ModifierLe] datetime2 NULL,
+                    CONSTRAINT [PK_Aeriens] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_Aeriens_Assurances_AssuranceId] FOREIGN KEY([AssuranceId]) REFERENCES [dbo].[Assurances]([Id]) ON DELETE CASCADE
+                );
+                CREATE UNIQUE INDEX [IX_Aeriens_AssuranceId] ON [dbo].[Aeriens]([AssuranceId]);
+            END
+
+            IF OBJECT_ID(N'[dbo].[Maritimes]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[Maritimes](
+                    [Id] uniqueidentifier NOT NULL,
+                    [PortEmbarquementId] uniqueidentifier NOT NULL,
+                    [PortDebarquementId] uniqueidentifier NOT NULL,
+                    [AssuranceId] uniqueidentifier NOT NULL,
+                    [CreerPar] nvarchar(max) NULL,
+                    [ModifierPar] nvarchar(max) NULL,
+                    [CreerLe] datetime2 NOT NULL,
+                    [ModifierLe] datetime2 NULL,
+                    CONSTRAINT [PK_Maritimes] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_Maritimes_Assurances_AssuranceId] FOREIGN KEY([AssuranceId]) REFERENCES [dbo].[Assurances]([Id]) ON DELETE CASCADE
+                );
+                CREATE UNIQUE INDEX [IX_Maritimes_AssuranceId] ON [dbo].[Maritimes]([AssuranceId]);
+            END
+
+            IF OBJECT_ID(N'[dbo].[Routiers]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[Routiers](
+                    [Id] uniqueidentifier NOT NULL,
+                    [RouteNationale] nvarchar(255) NOT NULL,
+                    [AssuranceId] uniqueidentifier NOT NULL,
+                    [CreerPar] nvarchar(max) NULL,
+                    [ModifierPar] nvarchar(max) NULL,
+                    [CreerLe] datetime2 NOT NULL,
+                    [ModifierLe] datetime2 NULL,
+                    CONSTRAINT [PK_Routiers] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_Routiers_Assurances_AssuranceId] FOREIGN KEY([AssuranceId]) REFERENCES [dbo].[Assurances]([Id]) ON DELETE CASCADE
+                );
+                CREATE UNIQUE INDEX [IX_Routiers_AssuranceId] ON [dbo].[Routiers]([AssuranceId]);
+            END
+
+            IF OBJECT_ID(N'[dbo].[Fluviaux]', N'U') IS NULL
+            BEGIN
+                CREATE TABLE [dbo].[Fluviaux](
+                    [Id] uniqueidentifier NOT NULL,
+                    [PortEmbarquementId] uniqueidentifier NOT NULL,
+                    [PortDebarquementId] uniqueidentifier NULL,
+                    [AssuranceId] uniqueidentifier NOT NULL,
+                    [CreerPar] nvarchar(max) NULL,
+                    [ModifierPar] nvarchar(max) NULL,
+                    [CreerLe] datetime2 NOT NULL,
+                    [ModifierLe] datetime2 NULL,
+                    CONSTRAINT [PK_Fluviaux] PRIMARY KEY ([Id]),
+                    CONSTRAINT [FK_Fluviaux_Assurances_AssuranceId] FOREIGN KEY([AssuranceId]) REFERENCES [dbo].[Assurances]([Id]) ON DELETE CASCADE
+                );
+                CREATE UNIQUE INDEX [IX_Fluviaux_AssuranceId] ON [dbo].[Fluviaux]([AssuranceId]);
+            END
+            """, cancellationToken);
     }
 
     /// <summary>

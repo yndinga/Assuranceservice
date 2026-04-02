@@ -14,5 +14,7 @@ public class Corridor : BaseModel
     [MaxLength(100)]
     public string Nom { get; set; } = string.Empty;
 
+    public Guid? PaysId { get; set; }
+
     public bool Actif { get; set; } = true;
 }

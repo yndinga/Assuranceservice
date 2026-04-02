@@ -36,7 +36,6 @@ public static class MassTransitConfiguration
                 });
 
             x.AddConsumer<AssuranceCreatedConsumer>();
-            x.AddConsumer<MarchandiseAddedConsumer>();
             x.AddConsumer<PrimeCalculatedConsumer>();
             x.AddConsumer<AssuranceProcessCompletedConsumer>();
             x.AddConsumer<AssuranceProcessFailedConsumer>();
@@ -49,7 +48,6 @@ public static class MassTransitConfiguration
                     cfg.ConfigureEndpoints(context);
                     cfg.Message<AssuranceProcessStartedEvent>(e => e.SetEntityName("assurance.process.started"));
                     cfg.Message<AssuranceCreatedEvent>(e => e.SetEntityName("assurance.created"));
-                    cfg.Message<MarchandiseAddedEvent>(e => e.SetEntityName("marchandise.added"));
                     cfg.Message<PrimeCalculatedEvent>(e => e.SetEntityName("prime.calculated"));
                     cfg.Message<AssuranceProcessCompletedEvent>(e => e.SetEntityName("assurance.process.completed"));
                     cfg.Message<AssuranceProcessFailedEvent>(e => e.SetEntityName("assurance.process.failed"));

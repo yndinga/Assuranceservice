@@ -47,12 +47,48 @@ namespace AssuranceService.Domain.Models
         public Guid? IntermediaireId { get; set; }
         public string OCRE { get; set; } = string.Empty;
 
-        // Navigation properties
-        public virtual ICollection<Marchandise> Marchandises { get; set; } = new List<Marchandise>();
+        // Données cargaison (fusionnées dans Assurances)
+        [Column(TypeName = "nvarchar(255)")]
+        public string? Designation { get; set; }
+        [Column(TypeName = "nvarchar(500)")]
+        public string? Nature { get; set; }
+        [Column(TypeName = "nvarchar(100)")]
+        public string? Specificites { get; set; }
+        [Column(TypeName = "nvarchar(500)")]
+        public string? Conditionnement { get; set; }
+        [Column(TypeName = "nvarchar(500)")]
+        public string? Description { get; set; }
+        [Column(TypeName = "nvarchar(50)")]
+        public string? Devise { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? MasseBrute { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? UniteStatistique { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? Marque { get; set; }
+
+        // Transport (fusionné dans Assurances)
+        [Column(TypeName = "nvarchar(255)")]
+        public string? NomTransporteur { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? NomNavire { get; set; }
+        [Column(TypeName = "nvarchar(100)")]
+        public string? TypeNavire { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? LieuSejour { get; set; }
+        [Column(TypeName = "nvarchar(50)")]
+        public string? DureeSejour { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? PaysProvenance { get; set; }
+        [Column(TypeName = "nvarchar(255)")]
+        public string? PaysDestination { get; set; }
         public virtual ICollection<Prime> Primes { get; set; } = new List<Prime>();
         public virtual ICollection<VisaAssurance> Visas { get; set; } = new List<VisaAssurance>();
         public virtual ICollection<Document> Documents { get; set; } = new List<Document>();
-        public virtual Voyage? Voyage { get; set; }
+        public virtual Maritime? Maritime { get; set; }
+        public virtual Aerien? Aerien { get; set; }
+        public virtual Routier? Routier { get; set; }
+        public virtual Fluvial? Fluvial { get; set; }
     }
 }
 

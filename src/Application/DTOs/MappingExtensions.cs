@@ -11,6 +11,10 @@ public static class MappingExtensions
     
     public static AssuranceDto ToDto(this Assurance assurance)
     {
+        var latestPrime = assurance.Primes?
+            .OrderByDescending(p => p.CreerLe)
+            .FirstOrDefault();
+
         return new AssuranceDto
         {
             ID = assurance.Id,
@@ -29,6 +33,29 @@ public static class MappingExtensions
             AssureurId = assurance.AssureurId,
             IntermediaireId = assurance.IntermediaireId,
             OCRE = assurance.OCRE,
+            Designation = assurance.Designation,
+            Nature = assurance.Nature,
+            Specificites = assurance.Specificites,
+            Conditionnement = assurance.Conditionnement,
+            Description = assurance.Description,
+            ValeurFCFA = latestPrime?.ValeurFCFA,
+            ValeurDevise = latestPrime?.ValeurDevise,
+            Devise = assurance.Devise,
+            MasseBrute = assurance.MasseBrute,
+            UniteStatistique = assurance.UniteStatistique,
+            Marque = assurance.Marque,
+            NomTransporteur = assurance.NomTransporteur,
+            NomNavire = assurance.NomNavire,
+            TypeNavire = assurance.TypeNavire,
+            LieuSejour = assurance.LieuSejour,
+            DureeSejour = assurance.DureeSejour,
+            PaysProvenance = assurance.PaysProvenance,
+            PaysDestination = assurance.PaysDestination,
+            PortEmbarquement = assurance.Maritime?.PortEmbarquementId ?? assurance.Fluvial?.PortEmbarquementId,
+            PortDebarquement = assurance.Maritime?.PortDebarquementId ?? assurance.Fluvial?.PortDebarquementId,
+            AeroportEmbarquement = assurance.Aerien?.AeroportEmbarquement,
+            AeroportDebarquement = assurance.Aerien?.AeroportDebarquement,
+            RouteNationale = assurance.Routier?.RouteNationale,
             CreerPar = assurance.CreerPar,
             ModifierPar = assurance.ModifierPar,
             CreerLe = assurance.CreerLe,
@@ -39,6 +66,9 @@ public static class MappingExtensions
     public static AssuranceDetailDto ToDetailDto(this Assurance assurance)
     {
         var baseDto = assurance.ToDto();
+        var latestPrime = assurance.Primes?
+            .OrderByDescending(p => p.CreerLe)
+            .FirstOrDefault();
         
         return new AssuranceDetailDto
         {
@@ -62,36 +92,8 @@ public static class MappingExtensions
             ModifierPar = baseDto.ModifierPar,
             CreerLe = baseDto.CreerLe,
             ModifierLe = baseDto.ModifierLe,
-            Marchandises = assurance.Marchandises?.Select(m => m.ToDto()).ToList() ?? new List<MarchandiseDto>(),
             Primes = assurance.Primes?.Select(p => p.ToDto()).ToList() ?? new List<PrimeDto>(),
-            Voyages = assurance.Voyage != null ? new List<VoyageDto> { assurance.Voyage.ToDto() } : new List<VoyageDto>(),
             Visas = assurance.Visas?.Select(v => v.ToDto()).ToList() ?? new List<VisaAssuranceDto>()
-        };
-    }
-    
-    #endregion
-    
-    #region Marchandise Mappings
-    
-    public static MarchandiseDto ToDto(this Marchandise marchandise)
-    {
-        return new MarchandiseDto
-        {
-            ID = marchandise.Id,
-            AssuranceId = marchandise.AssuranceId,
-            Designation = marchandise.Designation,
-            Nature = marchandise.Nature,
-            Specificites = marchandise.Specificites,
-            Conditionnement = marchandise.Conditionnement,
-            Description = marchandise.Description,
-            ValeurFCFA = marchandise.ValeurFCFA,
-            ValeurDevise = marchandise.ValeurDevise,
-            Devise = marchandise.Devise,
-            MasseBrute = marchandise.MasseBrute,
-            UniteStatistique = marchandise.UniteStatistique,
-            Marque = marchandise.Marque,
-            CreerLe = marchandise.CreerLe,
-            ModifierLe = marchandise.ModifierLe
         };
     }
     
@@ -118,52 +120,6 @@ public static class MappingExtensions
         };
     }
     
-    #endregion
-    
-    #region Voyage Mappings
-    
-    public static VoyageDto ToDto(this Voyage voyage)
-    {
-        return new VoyageDto
-        {
-            ID              = voyage.Id,
-            AssuranceId     = voyage.AssuranceId,
-            ModuleCode      = voyage.ModuleCode,
-            NomTransporteur = voyage.NomTransporteur,
-            NomNavire       = voyage.NomNavire,
-            TypeNavire      = voyage.TypeNavire,
-            LieuSejour      = voyage.LieuSejour,
-            DureeSejour     = voyage.DureeSejour,
-            PaysProvenance  = voyage.PaysProvenance,
-            PaysDestination = voyage.PaysDestination,
-            Maritime = voyage.Maritime is null ? null : new MaritimeDto
-            {
-                PortEmbarquementId   = voyage.Maritime.PortEmbarquementId,
-                PortEmbarquementNom  = voyage.Maritime.PortEmbarquement?.Nom,
-                PortDebarquementId   = voyage.Maritime.PortDebarquementId,
-                PortDebarquementNom  = voyage.Maritime.PortDebarquement?.Nom
-            },
-            Aerien = voyage.Aerien is null ? null : new AerienDto
-            {
-                AeroportEmbarquement = voyage.Aerien.AeroportEmbarquement,
-                AeroportDebarquement = voyage.Aerien.AeroportDebarquement
-            },
-            Routier = voyage.Routier is null ? null : new RoutierDto
-            {
-                RouteNationale = voyage.Routier.RouteNationale
-            },
-            Fluvial = voyage.Fluvial is null ? null : new FluvialDto
-            {
-                PortEmbarquementId   = voyage.Fluvial.PortEmbarquementId,
-                PortEmbarquementNom  = voyage.Fluvial.PortEmbarquement?.Nom,
-                PortDebarquementId   = voyage.Fluvial.PortDebarquementId,
-                PortDebarquementNom  = voyage.Fluvial.PortDebarquement?.Nom
-            },
-            CreerLe    = voyage.CreerLe,
-            ModifierLe = voyage.ModifierLe
-        };
-    }
-
     #endregion
     
     #region VisaAssurance Mappings

@@ -1,6 +1,6 @@
 services:
   assuranceservice:
-    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-v1.1.0}
+    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-1.1.0}
     container_name: assuranceservice
     ports:
       - "8087:8080"

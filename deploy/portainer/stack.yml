@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   assurance-service:
-    image: ${ASSURANCE_IMAGE:-assurance-service:local}
+    image: ${ASSURANCE_IMAGE:-ghcr.io/yndinga/assuranceservice:1.1.0}
     container_name: assurance-service
     restart: unless-stopped
     ports:

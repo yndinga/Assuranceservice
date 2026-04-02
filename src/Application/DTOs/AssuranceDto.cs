@@ -32,6 +32,35 @@ public record AssuranceDto
     public Guid? IntermediaireId { get; init; }
     public string OCRE { get; init; } = string.Empty;
 
+    // Données cargaison (fusionnées)
+    public string? Designation { get; init; }
+    public string? Nature { get; init; }
+    public string? Specificites { get; init; }
+    public string? Conditionnement { get; init; }
+    public string? Description { get; init; }
+    public decimal? ValeurFCFA { get; init; }
+    public decimal? ValeurDevise { get; init; }
+    public string? Devise { get; init; }
+    public string? MasseBrute { get; init; }
+    public string? UniteStatistique { get; init; }
+    public string? Marque { get; init; }
+
+    // Transport (fusionné)
+    public string? NomTransporteur { get; init; }
+    public string? NomNavire { get; init; }
+    public string? TypeNavire { get; init; }
+    public string? LieuSejour { get; init; }
+    public string? DureeSejour { get; init; }
+    public string? PaysProvenance { get; init; }
+    public string? PaysDestination { get; init; }
+
+    // Détails transport par module (issus des tables filles)
+    public Guid? PortEmbarquement { get; init; }
+    public Guid? PortDebarquement { get; init; }
+    public string? AeroportEmbarquement { get; init; }
+    public string? AeroportDebarquement { get; init; }
+    public string? RouteNationale { get; init; }
+
     // Audit
     public string CreerPar { get; init; } = string.Empty;
     public string ModifierPar { get; init; } = string.Empty;

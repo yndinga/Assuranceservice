@@ -27,6 +27,11 @@ public class DocumentRepository : IDocumentRepository
             .OrderByDescending(d => d.CreerLe)
             .ToListAsync(cancellationToken).ConfigureAwait(false);
 
+    public async Task<bool> ExistsByAssuranceIdAsync(Guid assuranceId, CancellationToken cancellationToken = default)
+        => await _db.Documents
+            .AnyAsync(d => d.AssuranceId == assuranceId, cancellationToken)
+            .ConfigureAwait(false);
+
     public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var doc = await _db.Documents.FirstOrDefaultAsync(d => d.Id == id, cancellationToken).ConfigureAwait(false);

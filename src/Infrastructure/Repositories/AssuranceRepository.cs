@@ -18,10 +18,12 @@ public class AssuranceRepository : IAssuranceRepository
     {
         return await _context.Assurances
             .Include(a => a.Garantie)
-            .Include(a => a.Marchandises)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Include(a => a.Primes)
             .Include(a => a.Visas)
-            .Include(a => a.Voyage)
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
@@ -46,7 +48,10 @@ public class AssuranceRepository : IAssuranceRepository
     {
         return await _context.Assurances
             .Include(a => a.Garantie)
-            .Include(a => a.Marchandises)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Include(a => a.Primes)
             .ToListAsync();
     }
@@ -80,6 +85,10 @@ public class AssuranceRepository : IAssuranceRepository
 
         var items = await query
             .Include(a => a.Garantie)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Skip((page - 1) * perPage)
             .Take(perPage)
             .ToListAsync();
@@ -91,7 +100,10 @@ public class AssuranceRepository : IAssuranceRepository
     {
         return await _context.Assurances
             .Include(a => a.Garantie)
-            .Include(a => a.Marchandises)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Include(a => a.Primes)
             .Where(a => a.AssureurId == assureurId)
             .OrderByDescending(a => a.ModifierLe)
@@ -102,7 +114,10 @@ public class AssuranceRepository : IAssuranceRepository
     {
         return await _context.Assurances
             .Include(a => a.Garantie)
-            .Include(a => a.Marchandises)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Include(a => a.Primes)
             .Where(a => a.IntermediaireId == intermediaireId)
             .OrderByDescending(a => a.ModifierLe)
@@ -148,7 +163,10 @@ public class AssuranceRepository : IAssuranceRepository
     {
         return await _context.Assurances
             .Include(a => a.Garantie)
-            .Include(a => a.Marchandises)
+            .Include(a => a.Maritime)
+            .Include(a => a.Aerien)
+            .Include(a => a.Routier)
+            .Include(a => a.Fluvial)
             .Include(a => a.Primes)
             .FirstOrDefaultAsync(a => a.NoPolice == noPolice);
     }
@@ -163,11 +181,6 @@ public class AssuranceRepository : IAssuranceRepository
             .FirstOrDefaultAsync();
     }
     
-    public async Task AddVoyageAsync(Voyage voyage)
-    {
-        await _context.Voyages.AddAsync(voyage);
-    }
-
     public async Task AddVisaAssuranceAsync(VisaAssurance visaAssurance)
     {
         await _context.VisaAssurances.AddAsync(visaAssurance);

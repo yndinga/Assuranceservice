@@ -4,17 +4,16 @@ namespace AssuranceService.Application.Assurances.Commands;
 
 /// <summary>
 /// Commande pour soumettre une assurance (Étape 4).
-/// Prérequis : l'assurance doit avoir au moins un voyage, une marchandise et un document.
+/// Prérequis : l'assurance doit avoir au moins un document et une prime.
 /// AssureurId doit déjà être renseigné (saisi à la création ou via ChoisirAssureur par l'intermédiaire).
 /// - Génère NoPolice et NumeroCert
-/// - Calcule la prime
 /// - Change le statut à 11 (Visa demandé)
 /// </summary>
 public record SubmitAssuranceCommand : IRequest<SubmitAssuranceResponse>
 {
     public Guid AssuranceId { get; init; }
     // GarantieId lu depuis Assurance.GarantieId (sauvegardé à la création)
-    // Devise lue depuis les marchandises. AssureurId lu depuis l'assurance (création directe ou ChoisirAssureur).
+    // AssureurId lu depuis l'assurance (création directe ou ChoisirAssureur).
 }
 
 public record SubmitAssuranceResponse

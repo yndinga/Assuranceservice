@@ -9,16 +9,13 @@ public class PrimeCalculatorService : IPrimeCalculatorService
 {
     private readonly ITauxChangeService _tauxChangeService;
     private readonly IGarantieRepository _garantieRepository;
-    private readonly IMarchandiseRepository _marchandiseRepository;
 
     public PrimeCalculatorService(
         ITauxChangeService tauxChangeService,
-        IGarantieRepository garantieRepository,
-        IMarchandiseRepository marchandiseRepository)
+        IGarantieRepository garantieRepository)
     {
         _tauxChangeService = tauxChangeService;
         _garantieRepository = garantieRepository;
-        _marchandiseRepository = marchandiseRepository;
     }
 
     /// <summary>

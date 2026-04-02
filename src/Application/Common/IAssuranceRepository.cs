@@ -5,7 +5,7 @@ namespace AssuranceService.Application.Common;
 public interface IAssuranceRepository
 {
     Task<Assurance?> GetByIdAsync(Guid id);
-    /// <summary>Récupère l'assurance avec Garantie uniquement (sans Voyage, Marchandises, etc.). Évite de charger la table Voyages.</summary>
+    /// <summary>Récupère l'assurance avec Garantie uniquement (sans collections liées).</summary>
     Task<Assurance?> GetByIdMinimalAsync(Guid id);
     /// <summary>Récupère uniquement le code statut (ex: "10", "11").</summary>
     Task<string?> GetStatutAsync(Guid id);
@@ -24,7 +24,6 @@ public interface IAssuranceRepository
     /// <summary>Retourne le NumeroCert le plus récent (trié DESC) pour la génération séquentielle.</summary>
     Task<string?> GetLastNumeroCertAsync();
     
-    Task AddVoyageAsync(Voyage voyage);
     Task AddVisaAssuranceAsync(VisaAssurance visaAssurance);
     Task SaveChangesAsync();
 }

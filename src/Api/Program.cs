@@ -3,12 +3,9 @@ using AssuranceService.Api.ExceptionHandling;
 using AssuranceService.Application;
 using AssuranceService.Application.Assurances.Commands;
 using AssuranceService.Application.Assurances.Queries;
-using AssuranceService.Application.Marchandises.Commands;
 using AssuranceService.Application.Primes.Commands;
 using AssuranceService.Application.Garanties.Commands;
 using AssuranceService.Application.Garanties.Queries;
-using AssuranceService.Application.Voyages.Commands;
-using AssuranceService.Application.Voyages.Queries;
 using AssuranceService.Application.Common;
 using AssuranceService.Domain.Models;
 using AssuranceService.Infrastructure;
@@ -22,6 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
 // Layers
@@ -67,7 +65,7 @@ app.UseConsulServiceDiscovery();
 // Mapper le endpoint Health Check
 app.MapHealthChecks("/health");
 
-app.MapGet("/", () => Results.Ok(new { message = "Le service assurance fonctionne", version = "v1.0.3", status = "OK" }))
+app.MapGet("/", () => Results.Ok(new { message = "Le service assurance fonctionne", version = "v1.1.0", status = "OK" }))
     .WithName("ServiceStatus")
     .WithTags("Health");
 
@@ -78,7 +76,45 @@ var api = app.MapGroup("/api/v1");
 api.MapPost("/assurances", async (CreateAssuranceCommand cmd, IMediator mediator) =>
 {
     var id = await mediator.Send(cmd);
-    return Results.Created($"/api/v1/assurances/{id}", new { id });
+    return Results.Created($"/api/v1/assurances/{id}", new
+    {
+        id,
+        importateurNom = cmd.ImportateurNom,
+        importateurNIU = cmd.ImportateurNIU,
+        dateDebut = cmd.DateDebut,
+        dateFin = cmd.DateFin,
+        typeContrat = cmd.TypeContrat,
+        duree = cmd.Duree,
+        module = cmd.Module,
+        assureurId = cmd.AssureurId,
+        intermediaireId = cmd.IntermediaireId,
+        garantieId = cmd.GarantieId,
+        ocre = cmd.OCRE,
+        statut = cmd.Statut,
+        designation = cmd.Designation,
+        nature = cmd.Nature,
+        specificites = cmd.Specificites,
+        conditionnement = cmd.Conditionnement,
+        description = cmd.Description,
+        valeurFCFA = cmd.ValeurFCFA,
+        valeurDevise = cmd.ValeurDevise,
+        devise = cmd.Devise,
+        masseBrute = cmd.MasseBrute,
+        uniteStatistique = cmd.UniteStatistique,
+        marque = cmd.Marque,
+        nomTransporteur = cmd.NomTransporteur,
+        nomNavire = cmd.NomNavire,
+        typeNavire = cmd.TypeNavire,
+        lieuSejour = cmd.LieuSejour,
+        dureeSejour = cmd.DureeSejour,
+        paysProvenance = cmd.PaysProvenance,
+        paysDestination = cmd.PaysDestination,
+        portEmbarquement = cmd.PortEmbarquement,
+        portDebarquement = cmd.PortDebarquement,
+        aeroportEmbarquement = cmd.AeroportEmbarquement,
+        aeroportDebarquement = cmd.AeroportDebarquement,
+        routeNationale = cmd.RouteNationale
+    });
 });
 
 api.MapGet("/assurances", async (HttpContext httpContext, IMediator mediator, string? search) =>
@@ -161,13 +197,6 @@ api.MapPost("/assurances/submit", async (SubmitAssuranceCommand cmd, IMediator m
     }
 });
 
-// Marchandises endpoints
-api.MapPost("/marchandises", async (CreateMarchandiseCommand cmd, IMediator mediator) =>
-{
-    var id = await mediator.Send(cmd);
-    return Results.Created($"/api/v1/marchandises/{id}", new { id });
-});
-
 // Primes endpoints
 api.MapPost("/primes", async (CreatePrimeCommand cmd, IMediator mediator) =>
 {
@@ -205,25 +234,6 @@ api.MapDelete("/garanties/{id:guid}", async (Guid id, IMediator mediator) =>
 {
     var deleted = await mediator.Send(new DeleteGarantieCommand(id));
     return deleted ? Results.NoContent() : Results.NotFound();
-});
-
-// Voyages endpoints
-api.MapPost("/voyages", async (CreateVoyageCommand cmd, IMediator mediator) =>
-{
-    var id = await mediator.Send(cmd);
-    return Results.Created($"/api/v1/voyages/{id}", new { id });
-});
-
-api.MapGet("/voyages/{id:guid}", async (Guid id, IMediator mediator) =>
-{
-    var voyage = await mediator.Send(new GetVoyageByIdQuery(id));
-    return voyage is null ? Results.NotFound() : Results.Ok(voyage);
-});
-
-api.MapGet("/assurances/{assuranceId:guid}/voyages", async (Guid assuranceId, IMediator mediator) =>
-{
-    var voyages = await mediator.Send(new GetVoyagesByAssuranceIdQuery(assuranceId));
-    return Results.Ok(voyages);
 });
 
 // Documents (fichiers stockés dans MinIO)
@@ -313,5 +323,106 @@ for (var i = 0; i < referentielRoutes.Length; i++)
     var h = referentielHandlers[i];
     api.MapGet($"/referentiel/{path}", (AssuranceService.Infrastructure.Data.AssuranceDbContext db) => h(db)).WithName(name).WithTags("Referentiel");
 }
+
+static async Task<List<Guid>> ResolvePaysIdsAsync(AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance)
+{
+    if (paysId.HasValue) return new List<Guid> { paysId.Value };
+    if (string.IsNullOrWhiteSpace(paysProvenance)) return new List<Guid>();
+
+    if (Guid.TryParse(paysProvenance, out var parsed)) return new List<Guid> { parsed };
+
+    var normalized = paysProvenance.Trim().ToUpperInvariant();
+    return await db.Pays
+        .Where(p => p.Actif && (
+            (p.Code != null && p.Code.ToUpper() == normalized) ||
+            (p.Nom != null && p.Nom.ToUpper() == normalized)))
+        .Select(p => p.Id)
+        .ToListAsync();
+}
+
+// Référentiel filtré par pays (paysProvenance -> ports/aéroports/fleuves/corridors)
+api.MapGet("/referentiel/ports/by-pays", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var paysIds = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (paysIds.Count == 0) return Results.BadRequest(new { error = "Paramètre paysId (ou paysProvenance) requis." });
+
+    var data = await db.Ports
+        .Where(x => x.Actif && x.PaysId.HasValue && paysIds.Contains(x.PaysId.Value))
+        .OrderBy(x => x.Nom)
+        .ToListAsync();
+    return Results.Ok(data);
+}).WithName("GetPortsByPays").WithTags("Referentiel");
+
+api.MapGet("/referentiel/aeroports/by-pays", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var paysIds = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (paysIds.Count == 0) return Results.BadRequest(new { error = "Paramètre paysId (ou paysProvenance) requis." });
+
+    var data = await db.Aeroports
+        .Where(x => x.Actif && x.PaysId.HasValue && paysIds.Contains(x.PaysId.Value))
+        .OrderBy(x => x.Nom)
+        .ToListAsync();
+    return Results.Ok(data);
+}).WithName("GetAeroportsByPays").WithTags("Referentiel");
+
+api.MapGet("/referentiel/fleuves/by-pays", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var paysIds = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (paysIds.Count == 0) return Results.BadRequest(new { error = "Paramètre paysId (ou paysProvenance) requis." });
+
+    var data = await db.Ports
+        .Where(x => x.Actif &&
+                    x.PaysId.HasValue &&
+                    paysIds.Contains(x.PaysId.Value) &&
+                    (x.Type == "FL" || x.Module == "FL"))
+        .OrderBy(x => x.Nom)
+        .ToListAsync();
+    return Results.Ok(data);
+}).WithName("GetFleuvesByPays").WithTags("Referentiel");
+
+api.MapGet("/referentiel/corridors/by-pays", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var paysIds = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (paysIds.Count == 0) return Results.BadRequest(new { error = "Paramètre paysId (ou paysProvenance) requis." });
+
+    var data = await db.Corridors
+        .Where(x => x.Actif && x.PaysId.HasValue && paysIds.Contains(x.PaysId.Value))
+        .OrderBy(x => x.Nom)
+        .ToListAsync();
+    return Results.Ok(data);
+}).WithName("GetCorridorsByPays").WithTags("Referentiel");
+
+// Alias legacy pour coller au front historique Laravel
+api.MapGet("/referentiel/getPorts", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var ids = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (ids.Count == 0) return Results.BadRequest(new { error = "Paramètre paysProvenance requis." });
+    var data = await db.Ports.Where(x => x.Actif && x.PaysId.HasValue && ids.Contains(x.PaysId.Value)).OrderBy(x => x.Nom).ToListAsync();
+    return Results.Ok(data);
+}).WithTags("Referentiel");
+
+api.MapGet("/referentiel/getAeroports", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var ids = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (ids.Count == 0) return Results.BadRequest(new { error = "Paramètre paysProvenance requis." });
+    var data = await db.Aeroports.Where(x => x.Actif && x.PaysId.HasValue && ids.Contains(x.PaysId.Value)).OrderBy(x => x.Nom).ToListAsync();
+    return Results.Ok(data);
+}).WithTags("Referentiel");
+
+api.MapGet("/referentiel/getFleuves", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var ids = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (ids.Count == 0) return Results.BadRequest(new { error = "Paramètre paysProvenance requis." });
+    var data = await db.Ports.Where(x => x.Actif && x.PaysId.HasValue && ids.Contains(x.PaysId.Value) && (x.Type == "FL" || x.Module == "FL")).OrderBy(x => x.Nom).ToListAsync();
+    return Results.Ok(data);
+}).WithTags("Referentiel");
+
+api.MapGet("/referentiel/getCorridors", async (AssuranceService.Infrastructure.Data.AssuranceDbContext db, Guid? paysId, string? paysProvenance) =>
+{
+    var ids = await ResolvePaysIdsAsync(db, paysId, paysProvenance);
+    if (ids.Count == 0) return Results.BadRequest(new { error = "Paramètre paysProvenance requis." });
+    var data = await db.Corridors.Where(x => x.Actif && x.PaysId.HasValue && ids.Contains(x.PaysId.Value)).OrderBy(x => x.Nom).ToListAsync();
+    return Results.Ok(data);
+}).WithTags("Referentiel");
 
 await app.RunAsync();

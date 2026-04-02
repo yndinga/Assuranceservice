@@ -3,6 +3,7 @@ using AssuranceService.Infrastructure.Data;
 using AssuranceService.Infrastructure.Repositories;
 using AssuranceService.Infrastructure.Messaging;
 using AssuranceService.Infrastructure.ExternalServices;
+using AssuranceService.Infrastructure.Services;
 using AssuranceService.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -30,20 +31,23 @@ public static class DependencyInjection
         
         // Repositories
         services.AddScoped<IAssuranceRepository, AssuranceRepository>();
-        services.AddScoped<IMarchandiseRepository, MarchandiseRepository>();
         services.AddScoped<IPrimeRepository, PrimeRepository>();
         services.AddScoped<IGarantieRepository, GarantieRepository>();
-        services.AddScoped<IVoyageRepository, VoyageRepository>();
         services.AddScoped<IModuleRepository, ModuleRepository>();
         services.AddScoped<IDeviseRepository, DeviseRepository>();
         services.AddScoped<IDocumentRepository, DocumentRepository>();
         services.AddScoped<IPortRepository, PortRepository>();
+        services.AddScoped<ITransportDetailsRepository, TransportDetailsRepository>();
+        services.AddScoped<IAvenantRepository, AvenantRepository>();
+        services.AddScoped<IAvenantRegistrationService, AvenantRegistrationService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         // Stockage objet (MinIO)
         services.AddSingleton<IObjectStorageService, MinioObjectStorageService>();
 
         // Services externes HTTP
         services.AddHttpClient();
+        services.AddHttpContextAccessor();
         services.AddScoped<IPartenaireService, PartenaireService>();
         // Taux de change en local (table TauxDeChanges + config), plus d'appel au service externe
         services.AddScoped<ITauxChangeService, LocalTauxChangeService>();

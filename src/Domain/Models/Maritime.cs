@@ -13,6 +13,6 @@ public class Maritime : BaseModel
     public Guid PortDebarquementId { get; set; }
     public virtual Port? PortDebarquement { get; set; }
 
-    public Guid VoyageId { get; set; }
-    public virtual Voyage? Voyage { get; set; }
+    public Guid AssuranceId { get; set; }
+    public virtual Assurance? Assurance { get; set; }
 }

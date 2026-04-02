@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -84,6 +85,25 @@ public class GlobalExceptionHandler : IExceptionHandler
                 _logger.LogError(ex, "DbUpdateException : {SqlDetail}", sqlDetail);
                 break;
 
+            case SqlException ex:
+                var sqlExDetail = ex.Message ?? string.Empty;
+                if (IsMissingColumnError(sqlExDetail))
+                {
+                    status = HttpStatusCode.UnprocessableEntity;
+                    title = "Schéma base non aligné";
+                    detail = "La base de données n'est pas à jour avec l'application (colonne manquante). Exécutez les scripts/migrations de mise à jour puis redémarrez l'API.";
+                }
+                else
+                {
+                    status = HttpStatusCode.Conflict;
+                    title = "Erreur SQL";
+                    detail = _env.IsDevelopment()
+                        ? $"SqlException : {sqlExDetail}"
+                        : DiagnosticDbMessage(sqlExDetail);
+                }
+                _logger.LogError(ex, "SqlException : {SqlDetail}", sqlExDetail);
+                break;
+
             default:
                 status = HttpStatusCode.InternalServerError;
                 title  = "Erreur interne du serveur";
@@ -140,6 +160,12 @@ public class GlobalExceptionHandler : IExceptionHandler
         return (sqlMessage.Contains("FK_Maritimes_Ports", StringComparison.OrdinalIgnoreCase) ||
                 (sqlMessage.Contains("FOREIGN KEY", StringComparison.OrdinalIgnoreCase) &&
                  sqlMessage.Contains("Ports", StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static bool IsMissingColumnError(string sqlMessage)
+    {
+        if (string.IsNullOrEmpty(sqlMessage)) return false;
+        return sqlMessage.Contains("Invalid column name", StringComparison.OrdinalIgnoreCase);
     }
 
     /// <summary>

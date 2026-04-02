@@ -15,6 +15,6 @@ public class Aerien : BaseModel
     public string? AeroportDebarquement { get; set; }
 
     [Required]
-    public Guid VoyageId { get; set; }
-    public virtual Voyage? Voyage { get; set; }
+    public Guid AssuranceId { get; set; }
+    public virtual Assurance? Assurance { get; set; }
 }

@@ -7,7 +7,6 @@ namespace AssuranceService.Application.Sagas;
 public class AssuranceProcessStateMachine : MassTransitStateMachine<AssuranceProcessState>
 {
     public State Created { get; private set; } = null!;
-    public State MarchandisesProcessing { get; private set; } = null!;
     public State PrimeCalculating { get; private set; } = null!;
     public State GarantiesAssigning { get; private set; } = null!;
     public State Completed { get; private set; } = null!;
@@ -15,7 +14,6 @@ public class AssuranceProcessStateMachine : MassTransitStateMachine<AssurancePro
 
     public Event<AssuranceProcessStartedEvent> ProcessStarted { get; private set; } = null!;
     public Event<AssuranceCreatedEvent> AssuranceCreated { get; private set; } = null!;
-    public Event<MarchandiseAddedEvent> MarchandiseAdded { get; private set; } = null!;
     public Event<PrimeCalculatedEvent> PrimeCalculated { get; private set; } = null!;
     public Event<AssuranceProcessCompletedEvent> ProcessCompleted { get; private set; } = null!;
     public Event<AssuranceProcessFailedEvent> ProcessFailed { get; private set; } = null!;
@@ -27,7 +25,6 @@ public class AssuranceProcessStateMachine : MassTransitStateMachine<AssurancePro
         // Define the events
         Event(() => ProcessStarted, x => x.CorrelateById(context => context.Message.AssuranceId));
         Event(() => AssuranceCreated, x => x.CorrelateById(context => context.Message.AssuranceId));
-        Event(() => MarchandiseAdded, x => x.CorrelateById(context => context.Message.AssuranceId));
         Event(() => PrimeCalculated, x => x.CorrelateById(context => context.Message.AssuranceId));
         Event(() => ProcessCompleted, x => x.CorrelateById(context => context.Message.AssuranceId));
         Event(() => ProcessFailed, x => x.CorrelateById(context => context.Message.AssuranceId));
@@ -59,22 +56,12 @@ public class AssuranceProcessStateMachine : MassTransitStateMachine<AssurancePro
                 {
                     context.Saga.AssuranceCreated = true;
                 })
-                .TransitionTo(MarchandisesProcessing)
-        );
-
-        // Marchandises processing state
-        During(MarchandisesProcessing,
-            When(MarchandiseAdded)
-                .Then(context =>
-                {
-                    context.Saga.MarchandisesAdded = true;
-                })
                 .TransitionTo(PrimeCalculating)
                 .Publish(context => new PrimeCalculatedEvent
                 {
                     PrimeId = Guid.NewGuid(),
                     AssuranceId = context.Message.AssuranceId,
-                    ValeurFCFA = context.Message.Valeur,
+                    ValeurFCFA = 0m,
                     CalculatedAt = DateTime.UtcNow
                 })
         );

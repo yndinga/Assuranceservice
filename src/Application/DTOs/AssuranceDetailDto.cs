@@ -5,8 +5,6 @@ namespace AssuranceService.Application.DTOs;
 /// </summary>
 public record AssuranceDetailDto : AssuranceDto
 {
-    public ICollection<MarchandiseDto> Marchandises { get; init; } = new List<MarchandiseDto>();
     public ICollection<PrimeDto> Primes { get; init; } = new List<PrimeDto>();
-    public ICollection<VoyageDto> Voyages { get; init; } = new List<VoyageDto>();
     public ICollection<VisaAssuranceDto> Visas { get; init; } = new List<VisaAssuranceDto>();
 }

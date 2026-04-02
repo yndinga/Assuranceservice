@@ -22,6 +22,7 @@ public class Document : BaseModel
     /// <summary>Clé de l'objet dans MinIO (ex: assurances/{assuranceId}/{guid}.pdf)</summary>
     [Required]
     [MaxLength(500)]
+    [Column("ObjectKey")]
     public string DocumentUrl { get; set; } = string.Empty;
 
     /// <summary>Type MIME du fichier (ex: application/pdf).</summary>
@@ -29,5 +30,6 @@ public class Document : BaseModel
     public string? ContentType { get; set; }
 
     /// <summary>Taille du fichier en octets.</summary>
+    [Column("FileSize")]
     public long? Taille { get; set; }
 }
