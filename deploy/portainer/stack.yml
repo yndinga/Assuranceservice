@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  assurance-service:
+    image: ${ASSURANCE_IMAGE:-assurance-service:local}
+    container_name: assurance-service
+    restart: unless-stopped
+    ports:
+      # Port exposé côté cluster/hôte -> port interne ASP.NET Core (8080)
+      - "${ASSURANCE_HTTP_PORT:-8087}:8080"
+    environment:
+      # ASP.NET Core
+      ASPNETCORE_URLS: "http://+:8080"
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Production}"
+
+      # DB (EF Core)
+      ConnectionStrings__AssuranceConnection: "${ASSURANCE_CONNECTION_STRING}"
+
+      # RabbitMQ (MassTransit) - optionnel (sinon In-Memory)
+      RabbitMQ__Enabled: "${RABBITMQ_ENABLED:-false}"
+      RabbitMQ__ConnectionString: "${RABBITMQ_CONNECTION_STRING:-}"
+
+      # MinIO
+      MinIO__Endpoint: "${MINIO_ENDPOINT}"
+      MinIO__AccessKey: "${MINIO_ACCESS_KEY}"
+      MinIO__SecretKey: "${MINIO_SECRET_KEY}"
+      MinIO__BucketName: "${MINIO_BUCKET_NAME:-assurances}"
+      MinIO__DocumentsBucketName: "${MINIO_DOCUMENTS_BUCKET_NAME:-ms-documents}"
+      MinIO__UseSSL: "${MINIO_USE_SSL:-false}"
+
+      # Wrapper documents (optionnel)
+      DocumentWrapper__Enabled: "${DOCUMENT_WRAPPER_ENABLED:-false}"
+      DocumentWrapper__BaseUrl: "${DOCUMENT_WRAPPER_BASE_URL:-}"
+      DocumentWrapper__UploadPath: "${DOCUMENT_WRAPPER_UPLOAD_PATH:-/api/assurance-documents}"
+      DocumentWrapper__Username: "${DOCUMENT_WRAPPER_USERNAME:-}"
+      DocumentWrapper__Password: "${DOCUMENT_WRAPPER_PASSWORD:-}"
+
+      # Services externes
+      ExternalServices__PartenaireServiceUrl: "${PARTENAIRE_SERVICE_URL:-}"
+
+      # Consul (optionnel si tu l’utilises)
+      Consul__Host: "${CONSUL_HOST:-}"
+      Consul__Port: "${CONSUL_PORT:-8500}"
+      Consul__ServiceName: "${CONSUL_SERVICE_NAME:-AssuranceService}"
+      Consul__ServiceId: "${CONSUL_SERVICE_ID:-assurance-service-1}"
+      Consul__ServiceAddress: "${CONSUL_SERVICE_ADDRESS:-}"
+      Consul__ServicePort: "${ASSURANCE_HTTP_PORT:-8087}"
+      Consul__HealthCheckPath: "${CONSUL_HEALTHCHECK_PATH:-/health}"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 15s
+      timeout: 3s
+      retries: 10
+
+    # Si tu déploies via Portainer sur un réseau existant (ex: "microservices"),
+    # active cette section et crée le réseau en "external" plus bas.
+    networks:
+      - ${STACK_NETWORK:-default}
+
+networks:
+  default:
+    name: ${STACK_NETWORK:-assurance_default}

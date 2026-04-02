@@ -1,3 +1,25 @@
+.git
+.vs
+.vscode
+**/.idea
+**/.DS_Store
+
+**/bin
+**/obj
+**/TestResults
+**/*.user
+**/*.suo
+**/*.cache
+**/*.log
+
+**/node_modules
+
+**/*.bak
+**/*.mdf
+**/*.ldf
+
+observability/
+scripts/
 # Build / IDE
 **/bin/
 **/obj/
