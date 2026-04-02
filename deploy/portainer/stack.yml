@@ -1,11 +1,11 @@
 version: "3.9"
 
-# Tag d’image : `latest` ou `master` suit les builds CI sur la branche. Un tag semver type `v1.1.0` ou `1.1.0` est figé
-# tant que tu n’as pas repoussé un nouveau tag Git ou changé ASSURANCE_IMAGE.
+# Tag d’image figé : par défaut v1.1.0 (publé sur GHCR après `git push origin v1.1.0`).
+# Nouvelle release : tag Git v1.1.1, puis ASSURANCE_IMAGE=ghcr.io/yndinga/assuranceservice:v1.1.1 dans Portainer.
 
 services:
   assurance-service:
-    image: ${ASSURANCE_IMAGE:-ghcr.io/yndinga/assuranceservice:latest}
+    image: ${ASSURANCE_IMAGE:-ghcr.io/yndinga/assuranceservice:v1.1.0}
     pull_policy: always
     container_name: assurance-service
     restart: unless-stopped
