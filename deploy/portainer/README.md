@@ -17,7 +17,7 @@ docker build -t REGISTRY/assurance-service:1.1.0 -f Dockerfile .
 docker push REGISTRY/assurance-service:1.1.0
 ```
 
-Pour que GitHub Actions publie aussi le tag **`1.1.0`** sur GHCR, crée et pousse un tag Git **`v1.1.0`** (les workflows `docker-publish*.yml` génèrent les tags semver à partir de `v*`).
+Pour une **version figée** `v1.1.0` / `1.1.0` sur GHCR, pousse le tag Git **`v1.1.0`**. Ce tag **ne se met pas à jour** quand tu pousses seulement `master` : l’image `:v1.1.0` reste celle du dernier build de ce tag. Pour suivre chaque build CI, utilise **`latest`** ou **`master`** (voir `pull_policy: always` dans le stack).
 
 ## 2) Stack Portainer
 

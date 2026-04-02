@@ -1,6 +1,12 @@
+# Image GHCR (workflow docker-publish-ghcr.yml) :
+# - latest / master / sha : mis à jour à chaque push sur master.
+# - v1.1.0 : uniquement si tu as poussé le tag Git `v1.1.0` ; ce tag ne change pas quand tu pousses seulement master.
+# Pour forcer un pull à chaque déploiement : pull_policy ci‑dessous + dans Portainer « redeploy » / recréer le conteneur.
+
 services:
   assuranceservice:
-    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-1.1.0}
+    image: ghcr.io/yndinga/assuranceservice:${IMAGE_TAG:-latest}
+    pull_policy: always
     container_name: assuranceservice
     ports:
       - "8087:8080"
