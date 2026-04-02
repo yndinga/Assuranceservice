@@ -13,6 +13,10 @@ services:
       # Port exposé côté cluster/hôte -> port interne ASP.NET Core (8080)
       - "${ASSURANCE_HTTP_PORT:-8087}:8080"
     environment:
+      # Incrémente DEPLOY_TRIGGER dans Portainer (ex. 1→2) pour forcer la recréation du conteneur après un
+      # nouveau build GHCR ; l’API ignore cette variable.
+      DEPLOY_TRIGGER: "${DEPLOY_TRIGGER:-0}"
+
       # ASP.NET Core
       ASPNETCORE_URLS: "http://+:8080"
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Production}"
