@@ -14,15 +14,57 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $ConnectionString = "Server=localhost,1420;User Id=sa;Password=DevStrongPwd@123;TrustServerCertificate=True;",
     [Parameter(Mandatory = $false)]
-    [string] $DatabaseName = "MS_ASSURANCE"
+    [string] $DatabaseName = "MS_ASSURANCE",
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("auto", "microsoft", "system")]
+    [string] $SqlClient = "auto"
 )
 
 $ErrorActionPreference = "Stop"
 
+function New-DbConnection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $connectionString,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("auto", "microsoft", "system")]
+        [string] $client
+    )
+
+    function Get-MasterConnectionString {
+        param([Parameter(Mandatory = $true)][string] $cs)
+
+        $clean = [regex]::Replace($cs, '(?i)(^|;)\s*(database|initial\s+catalog|initialcatalog)\s*=\s*[^;]*', '$1')
+        $clean = [regex]::Replace($clean, ';{2,}', ';').Trim()
+        $clean = $clean.TrimEnd(';')
+        if ([string]::IsNullOrWhiteSpace($clean)) { return "Database=master" }
+        return "$clean;Database=master"
+    }
+
+    $clientToUse = $client
+    if ($clientToUse -eq "auto") {
+        $clientToUse = "microsoft"
+        try {
+            Add-Type -AssemblyName "Microsoft.Data.SqlClient" -ErrorAction Stop | Out-Null
+        } catch {
+            $clientToUse = "system"
+        }
+    }
+
+    $masterCs = Get-MasterConnectionString -cs $connectionString
+
+    if ($clientToUse -eq "microsoft") {
+        if (-not ("Microsoft.Data.SqlClient.SqlConnection" -as [type])) {
+            Add-Type -AssemblyName "Microsoft.Data.SqlClient" -ErrorAction Stop | Out-Null
+        }
+        return New-Object Microsoft.Data.SqlClient.SqlConnection($masterCs)
+    }
+
+    return New-Object System.Data.SqlClient.SqlConnection($masterCs)
+}
+
 try {
-    $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder($ConnectionString)
-    $builder.InitialCatalog = "master"
-    $conn = New-Object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
+    $conn = New-DbConnection -connectionString $ConnectionString -client $SqlClient
     $conn.Open()
     try {
         $cmd = $conn.CreateCommand()
@@ -43,6 +85,12 @@ try {
         $conn.Close()
     }
 } catch {
-    Write-Error "Erreur restauration: $_"
+    $msg = $_.Exception.Message
+    $inner = $_.Exception.InnerException
+    while ($inner) {
+        $msg += " | Inner: " + $inner.Message
+        $inner = $inner.InnerException
+    }
+    Write-Error "Erreur restauration: $msg"
     exit 1
 }

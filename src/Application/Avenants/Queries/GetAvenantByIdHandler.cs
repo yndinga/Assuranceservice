@@ -38,6 +38,7 @@ public class GetAvenantByIdHandler : IRequestHandler<GetAvenantByIdQuery, Avenan
             a.AssuranceId,
             a.NoPolice,
             a.NoAvenant,
+            a.Type,
             a.Statut,
             a.Motif,
             a.CreerLe,

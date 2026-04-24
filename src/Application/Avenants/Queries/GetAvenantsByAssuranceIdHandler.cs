@@ -22,6 +22,7 @@ public class GetAvenantsByAssuranceIdHandler : IRequestHandler<GetAvenantsByAssu
                 a.Id,
                 a.NoPolice,
                 a.NoAvenant,
+                a.Type,
                 a.Statut,
                 a.Motif,
                 a.CreerLe,

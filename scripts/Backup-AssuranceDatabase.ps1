@@ -17,11 +17,59 @@ param(
     [Parameter(Mandatory = $false)]
     [string] $BackupPathOnServer = "",
     [Parameter(Mandatory = $false)]
-    [string] $OutputFolder = ".\backup"
+    [string] $OutputFolder = ".\backup",
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("auto", "microsoft", "system")]
+    [string] $SqlClient = "auto"
 )
 
 $ErrorActionPreference = "Stop"
 $DatabaseName = "MS_ASSURANCE"
+
+function New-DbConnection {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $connectionString,
+        [Parameter(Mandatory = $true)]
+        [ValidateSet("auto", "microsoft", "system")]
+        [string] $client
+    )
+
+    function Get-MasterConnectionString {
+        param([Parameter(Mandatory = $true)][string] $cs)
+
+        # Remove any existing database/catalog keywords, then force master.
+        # Handles: Database=..., Initial Catalog=..., InitialCatalog=...
+        $clean = [regex]::Replace($cs, '(?i)(^|;)\s*(database|initial\s+catalog|initialcatalog)\s*=\s*[^;]*', '$1')
+        $clean = [regex]::Replace($clean, ';{2,}', ';').Trim()
+        $clean = $clean.TrimEnd(';')
+        if ([string]::IsNullOrWhiteSpace($clean)) {
+            return "Database=master"
+        }
+        return "$clean;Database=master"
+    }
+
+    $clientToUse = $client
+    if ($clientToUse -eq "auto") {
+        $clientToUse = "microsoft"
+        try {
+            Add-Type -AssemblyName "Microsoft.Data.SqlClient" -ErrorAction Stop | Out-Null
+        } catch {
+            $clientToUse = "system"
+        }
+    }
+
+    if ($clientToUse -eq "microsoft") {
+        if (-not ("Microsoft.Data.SqlClient.SqlConnection" -as [type])) {
+            Add-Type -AssemblyName "Microsoft.Data.SqlClient" -ErrorAction Stop | Out-Null
+        }
+        $masterCs = Get-MasterConnectionString -cs $connectionString
+        return New-Object Microsoft.Data.SqlClient.SqlConnection($masterCs)
+    }
+
+    $masterCs = Get-MasterConnectionString -cs $connectionString
+    return New-Object System.Data.SqlClient.SqlConnection($masterCs)
+}
 
 # Chemin du backup côté serveur SQL (où SQL Server écrit le .bak)
 if ([string]::IsNullOrWhiteSpace($BackupPathOnServer)) {
@@ -38,9 +86,7 @@ if ([string]::IsNullOrWhiteSpace($BackupPathOnServer)) {
 }
 
 try {
-    $builder = New-Object System.Data.SqlClient.SqlConnectionStringBuilder($ConnectionString)
-    $builder.InitialCatalog = "master"
-    $conn = New-Object System.Data.SqlClient.SqlConnection($builder.ConnectionString)
+    $conn = New-DbConnection -connectionString $ConnectionString -client $SqlClient
     $conn.Open()
     try {
         $pathEscaped = $BackupPathOnServer.Replace("'", "''")
@@ -57,6 +103,12 @@ try {
         $conn.Close()
     }
 } catch {
-    Write-Error "Erreur backup: $_"
+    $msg = $_.Exception.Message
+    $inner = $_.Exception.InnerException
+    while ($inner) {
+        $msg += " | Inner: " + $inner.Message
+        $inner = $inner.InnerException
+    }
+    Write-Error "Erreur backup: $msg"
     exit 1
 }

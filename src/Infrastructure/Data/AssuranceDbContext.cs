@@ -167,6 +167,7 @@ public class AssuranceDbContext : DbContext
             entity.Property(a => a.NoAvenant).IsRequired().HasMaxLength(255);
             entity.Property(a => a.Statut).IsRequired().HasMaxLength(10);
             entity.Property(a => a.Motif).HasColumnType("nvarchar(max)");
+            entity.Property(a => a.Type).IsRequired().HasMaxLength(50);
 
             entity.HasOne(a => a.Assurance)
                   .WithMany()

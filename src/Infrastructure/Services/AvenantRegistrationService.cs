@@ -71,6 +71,7 @@ public class AvenantRegistrationService : IAvenantRegistrationService
                 AssuranceId = assurance.Id,
                 NoPolice = assurance.NoPolice ?? string.Empty,
                 NoAvenant = noAvenant,
+                Type = cmd.Type.Trim().ToUpperInvariant(),
                 Statut = StatutAssuranceCodes.Elaboré,
                 Motif = cmd.Motif,
                 CreerLe = now,

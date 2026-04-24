@@ -107,6 +107,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<Guid>("AssuranceId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
 
@@ -119,12 +122,9 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<string>("ModifierPar")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("VoyageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("VoyageId")
+                    b.HasIndex("AssuranceId")
                         .IsUnique();
 
                     b.ToTable("Aeriens", (string)null);
@@ -140,6 +140,9 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<Guid?>("AssureurId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Conditionnement")
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
 
@@ -152,9 +155,21 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<DateTime?>("DateFin")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Designation")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Devise")
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Duree")
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("DureeSejour")
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<Guid?>("GarantieId")
                         .HasColumnType("uniqueidentifier");
@@ -172,6 +187,15 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<Guid?>("IntermediaireId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("LieuSejour")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Marque")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("MasseBrute")
+                        .HasColumnType("nvarchar(255)");
+
                     b.Property<DateTime?>("ModifierLe")
                         .HasColumnType("datetime2");
 
@@ -183,8 +207,17 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
+                    b.Property<string>("Nature")
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<string>("NoPolice")
                         .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("NomNavire")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("NomTransporteur")
                         .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("NumeroCert")
@@ -195,6 +228,15 @@ namespace AssuranceService.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("PaysDestination")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("PaysProvenance")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Specificites")
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Statut")
                         .IsRequired()
@@ -207,6 +249,12 @@ namespace AssuranceService.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(25)
                         .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("TypeNavire")
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("UniteStatistique")
+                        .HasColumnType("nvarchar(255)");
 
                     b.HasKey("Id");
 
@@ -221,6 +269,94 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasFilter("[NumeroCert] IS NOT NULL");
 
                     b.ToTable("Assurances", (string)null);
+                });
+
+            modelBuilder.Entity("AssuranceService.Domain.Models.Avenant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<Guid>("AssuranceId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("AssuranceId");
+
+                    b.Property<DateTime>("CreerLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreerPar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ModifierLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifierPar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Motif")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NoAvenant")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("NoPolice")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Statut")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("Type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssuranceId", "NoAvenant")
+                        .IsUnique();
+
+                    b.ToTable("Avenants", (string)null);
+                });
+
+            modelBuilder.Entity("AssuranceService.Domain.Models.Commentaire", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("Id");
+
+                    b.Property<DateTime>("CreerLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreerPar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DocumentId");
+
+                    b.Property<DateTime?>("ModifierLe")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModifierPar")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Motif")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("motif");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Commentaires", (string)null);
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Cotation", b =>
@@ -306,7 +442,8 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<string>("DocumentUrl")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("ObjectKey");
 
                     b.Property<DateTime?>("ModifierLe")
                         .HasColumnType("datetime2");
@@ -315,7 +452,8 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<long?>("Taille")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("FileSize");
 
                     b.HasKey("Id");
 
@@ -330,6 +468,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("Id");
+
+                    b.Property<Guid>("AssuranceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
@@ -349,17 +490,14 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<Guid>("PortEmbarquementId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("VoyageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("AssuranceId")
+                        .IsUnique();
 
                     b.HasIndex("PortDebarquementId");
 
                     b.HasIndex("PortEmbarquementId");
-
-                    b.HasIndex("VoyageId")
-                        .IsUnique();
 
                     b.ToTable("Fluviaux", (string)null);
                 });
@@ -404,7 +542,7 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.ToTable("Garanties", (string)null);
                 });
 
-            modelBuilder.Entity("AssuranceService.Domain.Models.Marchandise", b =>
+            modelBuilder.Entity("AssuranceService.Domain.Models.Historique", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -412,13 +550,18 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasColumnName("Id");
 
                     b.Property<Guid>("AssuranceId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AssuranceId");
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Conditionnement")
+                    b.Property<Guid>("AvenantId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CibleEntite")
                         .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Commentaire")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
@@ -426,59 +569,33 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<string>("CreerPar")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Designation")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Devise")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("Devise");
-
-                    b.Property<string>("Marque")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("MasseBrute")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<DateTime?>("ModifierLe")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("ModifierPar")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Nature")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Specificites")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("UniteStatistique")
+                    b.Property<string>("NomChamp")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
-                    b.Property<decimal?>("ValeurDevise")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<Guid?>("ReferenceId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("ValeurFCFA")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<string>("ValeurApres")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ValeurAvant")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AssuranceId");
 
-                    b.ToTable("Marchandises", (string)null);
+                    b.HasIndex("AvenantId");
+
+                    b.ToTable("Historiques", (string)null);
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Maritime", b =>
@@ -487,6 +604,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("Id");
+
+                    b.Property<Guid>("AssuranceId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
@@ -506,17 +626,14 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Property<Guid>("PortEmbarquementId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("VoyageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("AssuranceId")
+                        .IsUnique();
 
                     b.HasIndex("PortDebarquementId");
 
                     b.HasIndex("PortEmbarquementId");
-
-                    b.HasIndex("VoyageId")
-                        .IsUnique();
 
                     b.ToTable("Maritimes", (string)null);
                 });
@@ -647,6 +764,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("PaysId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
@@ -1047,6 +1167,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("Id");
 
+                    b.Property<Guid>("AssuranceId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreerLe")
                         .HasColumnType("datetime2");
 
@@ -1064,12 +1187,9 @@ namespace AssuranceService.Infrastructure.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<Guid>("VoyageId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("VoyageId")
+                    b.HasIndex("AssuranceId")
                         .IsUnique();
 
                     b.ToTable("Routiers", (string)null);
@@ -1176,83 +1296,15 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.ToTable("VisaAssurances", (string)null);
                 });
 
-            modelBuilder.Entity("AssuranceService.Domain.Models.Voyage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("Id");
-
-                    b.Property<Guid>("AssuranceId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreerLe")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreerPar")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DureeSejour")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("LieuSejour")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<DateTime?>("ModifierLe")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ModifierPar")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ModuleCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("NomNavire")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("NomTransporteur")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("PaysDestination")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("PaysProvenance")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("TypeNavire")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AssuranceId")
-                        .IsUnique();
-
-                    b.ToTable("Voyages", (string)null);
-                });
-
             modelBuilder.Entity("AssuranceService.Domain.Models.Aerien", b =>
                 {
-                    b.HasOne("AssuranceService.Domain.Models.Voyage", "Voyage")
+                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
                         .WithOne("Aerien")
-                        .HasForeignKey("AssuranceService.Domain.Models.Aerien", "VoyageId")
+                        .HasForeignKey("AssuranceService.Domain.Models.Aerien", "AssuranceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Voyage");
+                    b.Navigation("Assurance");
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Assurance", b =>
@@ -1263,6 +1315,17 @@ namespace AssuranceService.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Garantie");
+                });
+
+            modelBuilder.Entity("AssuranceService.Domain.Models.Avenant", b =>
+                {
+                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
+                        .WithMany()
+                        .HasForeignKey("AssuranceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Assurance");
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Document", b =>
@@ -1278,6 +1341,12 @@ namespace AssuranceService.Infrastructure.Migrations
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Fluvial", b =>
                 {
+                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
+                        .WithOne("Fluvial")
+                        .HasForeignKey("AssuranceService.Domain.Models.Fluvial", "AssuranceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AssuranceService.Domain.Models.Referentiel.Port", "PortDebarquement")
                         .WithMany()
                         .HasForeignKey("PortDebarquementId")
@@ -1289,32 +1358,32 @@ namespace AssuranceService.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AssuranceService.Domain.Models.Voyage", "Voyage")
-                        .WithOne("Fluvial")
-                        .HasForeignKey("AssuranceService.Domain.Models.Fluvial", "VoyageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Assurance");
 
                     b.Navigation("PortDebarquement");
 
                     b.Navigation("PortEmbarquement");
-
-                    b.Navigation("Voyage");
                 });
 
-            modelBuilder.Entity("AssuranceService.Domain.Models.Marchandise", b =>
+            modelBuilder.Entity("AssuranceService.Domain.Models.Historique", b =>
                 {
-                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
-                        .WithMany("Marchandises")
-                        .HasForeignKey("AssuranceId")
+                    b.HasOne("AssuranceService.Domain.Models.Avenant", "Avenant")
+                        .WithMany("Historiques")
+                        .HasForeignKey("AvenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Assurance");
+                    b.Navigation("Avenant");
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Maritime", b =>
                 {
+                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
+                        .WithOne("Maritime")
+                        .HasForeignKey("AssuranceService.Domain.Models.Maritime", "AssuranceId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("AssuranceService.Domain.Models.Referentiel.Port", "PortDebarquement")
                         .WithMany()
                         .HasForeignKey("PortDebarquementId")
@@ -1327,17 +1396,11 @@ namespace AssuranceService.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("AssuranceService.Domain.Models.Voyage", "Voyage")
-                        .WithOne("Maritime")
-                        .HasForeignKey("AssuranceService.Domain.Models.Maritime", "VoyageId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("Assurance");
 
                     b.Navigation("PortDebarquement");
 
                     b.Navigation("PortEmbarquement");
-
-                    b.Navigation("Voyage");
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Prime", b =>
@@ -1362,13 +1425,13 @@ namespace AssuranceService.Infrastructure.Migrations
 
             modelBuilder.Entity("AssuranceService.Domain.Models.Routier", b =>
                 {
-                    b.HasOne("AssuranceService.Domain.Models.Voyage", "Voyage")
+                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
                         .WithOne("Routier")
-                        .HasForeignKey("AssuranceService.Domain.Models.Routier", "VoyageId")
+                        .HasForeignKey("AssuranceService.Domain.Models.Routier", "AssuranceId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Voyage");
+                    b.Navigation("Assurance");
                 });
 
             modelBuilder.Entity("AssuranceService.Domain.Models.VisaAssurance", b =>
@@ -1382,44 +1445,31 @@ namespace AssuranceService.Infrastructure.Migrations
                     b.Navigation("Assurance");
                 });
 
-            modelBuilder.Entity("AssuranceService.Domain.Models.Voyage", b =>
-                {
-                    b.HasOne("AssuranceService.Domain.Models.Assurance", "Assurance")
-                        .WithOne("Voyage")
-                        .HasForeignKey("AssuranceService.Domain.Models.Voyage", "AssuranceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Assurance");
-                });
-
             modelBuilder.Entity("AssuranceService.Domain.Models.Assurance", b =>
                 {
-                    b.Navigation("Documents");
-
-                    b.Navigation("Marchandises");
-
-                    b.Navigation("Primes");
-
-                    b.Navigation("Visas");
-
-                    b.Navigation("Voyage");
-                });
-
-            modelBuilder.Entity("AssuranceService.Domain.Models.Referentiel.Devise", b =>
-                {
-                    b.Navigation("TauxDeChanges");
-                });
-
-            modelBuilder.Entity("AssuranceService.Domain.Models.Voyage", b =>
-                {
                     b.Navigation("Aerien");
+
+                    b.Navigation("Documents");
 
                     b.Navigation("Fluvial");
 
                     b.Navigation("Maritime");
 
+                    b.Navigation("Primes");
+
                     b.Navigation("Routier");
+
+                    b.Navigation("Visas");
+                });
+
+            modelBuilder.Entity("AssuranceService.Domain.Models.Avenant", b =>
+                {
+                    b.Navigation("Historiques");
+                });
+
+            modelBuilder.Entity("AssuranceService.Domain.Models.Referentiel.Devise", b =>
+                {
+                    b.Navigation("TauxDeChanges");
                 });
 #pragma warning restore 612, 618
         }

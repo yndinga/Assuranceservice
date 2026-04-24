@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Models.Commons;
 
 namespace AssuranceService.Domain.Models;
@@ -42,6 +43,12 @@ public class Avenant : BaseModel
 
     [Column(TypeName = "nvarchar(max)")]
     public string? Motif { get; set; }
+
+    /// <summary>Type ou nature de l’avenant (code métier : correction, extension, annulation, etc.).</summary>
+    [Required]
+    [Column("Type", TypeName = "nvarchar(50)")]
+    [MaxLength(50)]
+    public string Type { get; set; } = null!;
 
     public virtual ICollection<Historique> Historiques { get; set; } = new List<Historique>();
 }
