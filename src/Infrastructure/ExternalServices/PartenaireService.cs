@@ -9,6 +9,13 @@ namespace AssuranceService.Infrastructure.ExternalServices;
 /// </summary>
 public class PartenaireService : IPartenaireService
 {
+    private static readonly TimeSpan[] ConnectionRetryDelays =
+    [
+        TimeSpan.FromMilliseconds(500),
+        TimeSpan.FromSeconds(1),
+        TimeSpan.FromSeconds(2)
+    ];
+
     private readonly HttpClient _httpClient;
     private readonly string _partenaireServiceUrl;
 
@@ -35,7 +42,8 @@ public class PartenaireService : IPartenaireService
     {
         try
         {
-            var response = await _httpClient.GetAsync($"{_partenaireServiceUrl}/api/partenaires/{partenaireId}");
+            using var response = await GetWithConnectionRetryAsync(
+                $"{_partenaireServiceUrl}/api/partenaires/{partenaireId}");
             
             if (!response.IsSuccessStatusCode)
             {
@@ -65,7 +73,8 @@ public class PartenaireService : IPartenaireService
         try
         {
             var code = Uri.EscapeDataString(organisationCode.Trim());
-            var response = await _httpClient.GetAsync($"{_partenaireServiceUrl}/api/v1/organisations/{code}");
+            using var response = await GetWithConnectionRetryAsync(
+                $"{_partenaireServiceUrl}/api/v1/organisations/{code}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -81,7 +90,24 @@ public class PartenaireService : IPartenaireService
         }
         catch (HttpRequestException ex)
         {
-            throw new InvalidOperationException($"Impossible de contacter le service Organisations: {ex.Message}", ex);
+            throw new InvalidOperationException(
+                $"Impossible de contacter le service Organisations ({_partenaireServiceUrl}): {ex.Message}",
+                ex);
+        }
+    }
+
+    private async Task<HttpResponseMessage> GetWithConnectionRetryAsync(string url)
+    {
+        for (var attempt = 0; ; attempt++)
+        {
+            try
+            {
+                return await _httpClient.GetAsync(url);
+            }
+            catch (HttpRequestException) when (attempt < ConnectionRetryDelays.Length)
+            {
+                await Task.Delay(ConnectionRetryDelays[attempt]);
+            }
         }
     }
 }
