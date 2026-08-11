@@ -87,7 +87,7 @@ public class SubmitAssuranceHandler : IRequestHandler<SubmitAssuranceCommand, Su
             assurance.Intermediaire = null;
         }
 
-        // 6. GÃ©nÃ©rer NoPolice et NumeroCert
+        // 6. La numerotation est reservee a la signature de l'assurance.
 
         // 7. Via intermÃ©diaire : crÃ©er la ligne VisaAssurance (signataire) â€” une seule ligne par assurance
         assurance.Etat = StatutAssuranceCodes.IsModificationDemandee(assurance.Etat)

@@ -16,13 +16,14 @@ public class NumeroGeneratorService : INumeroGeneratorService
     }
 
     /// <summary>
-    /// Genere le NoPolice: {CodeAssureur}{Compteur}{AAMM}. Exemple: AMC0000012607.
+    /// Genere le NoPolice uniquement a la signature :
+    /// {CodeAssureur}{Compteur:D6}{JJMMAA}. Exemple: AAC100017250723.
     /// </summary>
     public async Task<string> GenerateNoPoliceLAsync(string codePartenaire)
     {
         var codeAssureur = NormalizeAssureurCode(codePartenaire);
         var compteur = await GetNextCompteurAsync();
-        var dateFormat = DateTime.Now.ToString("yyMM");
+        var dateFormat = DateTime.Now.ToString("ddMMyy");
 
         return $"{codeAssureur}{compteur:D6}{dateFormat}";
     }

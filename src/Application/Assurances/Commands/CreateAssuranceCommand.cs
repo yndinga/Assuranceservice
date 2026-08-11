@@ -4,7 +4,7 @@ namespace AssuranceService.Application.Assurances.Commands;
 
 public record CreateAssuranceCommand : IRequest<Guid>
 {
-    // NoPolice et NumeroCert sont générés automatiquement lors de la soumission (Étape 4)
+    // NoPolice et NumeroCert sont générés automatiquement lors de la signature.
     public string ImportateurNom { get; init; } = string.Empty;
     public string? ImportateurNIU { get; init; }
     public DateTime? DateDebut { get; init; }
