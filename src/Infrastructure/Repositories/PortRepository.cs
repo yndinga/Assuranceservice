@@ -17,4 +17,27 @@ public class PortRepository : IPortRepository
     {
         return await _context.Ports.AnyAsync(p => p.Id == id, cancellationToken);
     }
+
+    public async Task<Guid?> GetIdByCodeAsync(string? code, string? type = null, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return null;
+
+        var normalizedCode = code.Trim().ToUpper();
+        var query = _context.Ports.AsNoTracking()
+            .Where(p => p.Code.ToUpper() == normalizedCode);
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            var normalizedType = type.Trim().ToUpper();
+            query = query.Where(p =>
+                (p.Type != null && p.Type.ToUpper() == normalizedType) ||
+                p.Module.ToUpper() == normalizedType);
+        }
+
+        return await query
+            .OrderByDescending(p => p.Actif)
+            .Select(p => (Guid?)p.Id)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
 }

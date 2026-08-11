@@ -1,3 +1,4 @@
+using AssuranceService.Domain.Constants;
 using FluentValidation;
 
 namespace AssuranceService.Application.Assurances.Commands;
@@ -17,9 +18,9 @@ public class UpdateAssuranceValidator : AbstractValidator<UpdateAssuranceCommand
             .NotEmpty().WithMessage("Le type de contrat est requis.")
             .MaximumLength(250);
 
-        RuleFor(x => x.Module)
-            .NotEmpty().WithMessage("Le module est requis.")
-            .MaximumLength(250);
+        RuleFor(x => x.ModeDeTransport)
+            .NotEmpty().WithMessage("Le mode de transport est requis.")
+            .MaximumLength(10);
 
         RuleFor(x => x.NoPolice)
             .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.NoPolice));
@@ -28,22 +29,35 @@ public class UpdateAssuranceValidator : AbstractValidator<UpdateAssuranceCommand
             .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.NumeroCert));
 
         RuleFor(x => x.Duree)
-            .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.Duree));
+            .Must(v => int.TryParse(v?.Trim(), out var days) && days > 0)
+            .WithMessage("La durée en jours doit être un entier strictement positif.");
 
-        RuleFor(x => x.GarantieId)
-            .NotEmpty().When(x => x.GarantieId.HasValue);
+        RuleFor(x => x.Garantie)
+            .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.Garantie));
 
         RuleFor(x => x.NomTransporteur)
             .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.NomTransporteur));
 
         RuleFor(x => x.NomNavire)
-            .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.NomNavire));
+            .NotEmpty()
+            .When(x => IsMaritimeOrFluvial(x.ModeDeTransport))
+            .WithMessage("NomNavire requis pour MA et FL.")
+            .MaximumLength(255);
 
         RuleFor(x => x.TypeNavire)
-            .MaximumLength(100).When(x => !string.IsNullOrWhiteSpace(x.TypeNavire));
+            .NotEmpty()
+            .When(x => IsMaritimeOrFluvial(x.ModeDeTransport))
+            .WithMessage("TypeNavire requis pour MA et FL.")
+            .MaximumLength(100);
 
         RuleFor(x => x)
             .Must(x => !x.DateFin.HasValue || !x.DateDebut.HasValue || x.DateFin >= x.DateDebut)
             .WithMessage("La date de fin doit être supérieure ou égale à la date de début.");
+    }
+
+    private static bool IsMaritimeOrFluvial(string? mode)
+    {
+        var normalized = ModeDeTransportCodes.Normalize(mode);
+        return normalized is ModeDeTransportCodes.Maritime or ModeDeTransportCodes.Fluvial;
     }
 }

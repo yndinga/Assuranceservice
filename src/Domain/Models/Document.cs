@@ -14,6 +14,11 @@ public class Document : BaseModel
     public Guid AssuranceId { get; set; }
     public virtual Assurance? Assurance { get; set; }
 
+    /// <summary>Nature métier de la pièce : FACTURE_DI, POLICE, CERTIFICAT ou PIECE_ASSURANCE.</summary>
+    [Required]
+    [MaxLength(50)]
+    public string TypeDocument { get; set; } = "PIECE_ASSURANCE";
+
     /// <summary>Nom du fichier tel qu'enregistré (ex: facture.pdf)</summary>
     [Required]
     [MaxLength(255)]

@@ -9,7 +9,8 @@ public class ChoisirAssureurValidator : AbstractValidator<ChoisirAssureurCommand
         RuleFor(x => x.AssuranceId)
             .NotEmpty().WithMessage("L'identifiant de l'assurance est requis.");
 
-        RuleFor(x => x.AssureurId)
-            .NotEmpty().WithMessage("L'identifiant de l'assureur (maison d'assurance) choisi est requis.");
+        RuleFor(x => x.Assureur)
+            .NotEmpty().WithMessage("Le code assureur choisi est requis.")
+            .MaximumLength(250).WithMessage("Le code assureur ne doit pas depasser 250 caracteres.");
     }
 }

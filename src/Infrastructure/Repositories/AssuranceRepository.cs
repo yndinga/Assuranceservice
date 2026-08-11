@@ -1,4 +1,5 @@
 using AssuranceService.Application.Common;
+using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Models;
 using AssuranceService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,14 +15,23 @@ public class AssuranceRepository : IAssuranceRepository
         _context = context;
     }
 
+    private static IQueryable<Assurance> WithDetails(IQueryable<Assurance> query) =>
+        query
+            .Include(a => a.Voyage)!
+                .ThenInclude(v => v!.Maritime)
+            .Include(a => a.Voyage)!
+                .ThenInclude(v => v!.Aerien)
+            .Include(a => a.Voyage)!
+                .ThenInclude(v => v!.Routier)
+            .Include(a => a.Voyage)!
+                .ThenInclude(v => v!.Fluvial)
+            .Include(a => a.Garantie)
+            .Include(a => a.Declarations)
+            .Include(a => a.Lignes);
+
     public async Task<Assurance?> GetByIdAsync(Guid id)
     {
-        return await _context.Assurances
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        return await WithDetails(_context.Assurances)
             .Include(a => a.Primes)
             .Include(a => a.Visas)
             .FirstOrDefaultAsync(a => a.Id == id);
@@ -30,7 +40,6 @@ public class AssuranceRepository : IAssuranceRepository
     public async Task<Assurance?> GetByIdMinimalAsync(Guid id)
     {
         return await _context.Assurances
-            .Include(a => a.Garantie)
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Id == id);
     }
@@ -40,41 +49,38 @@ public class AssuranceRepository : IAssuranceRepository
         return await _context.Assurances
             .AsNoTracking()
             .Where(a => a.Id == id)
-            .Select(a => a.Statut)
+            .Select(a => a.Etat)
             .FirstOrDefaultAsync();
     }
 
     public async Task<IEnumerable<Assurance>> GetAllAsync()
     {
-        return await _context.Assurances
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        return await WithDetails(_context.Assurances)
             .Include(a => a.Primes)
             .ToListAsync();
     }
 
-    public async Task<(IEnumerable<Assurance> Items, int TotalCount)> GetPagedAsync(string? search, int page, int perPage, string? ocre, Guid? intermediaireId, Guid? assureurId)
+    public async Task<(IEnumerable<Assurance> Items, int TotalCount)> GetPagedAsync(string? search, int page, int perPage, string? organisationCode, string? organisationType)
     {
         var query = _context.Assurances.AsNoTracking();
 
-        // Filtres rôle (comme Laravel) : un seul appliqué, sinon admin = tout
-        if (!string.IsNullOrWhiteSpace(ocre))
-            query = query.Where(a => a.OCRE == ocre);
-        else if (intermediaireId.HasValue)
-            query = query.Where(a => a.IntermediaireId == intermediaireId.Value);
-        else if (assureurId.HasValue)
-            query = query.Where(a => a.AssureurId == assureurId.Value);
+        if (!string.IsNullOrWhiteSpace(organisationCode))
+        {
+            if (string.Equals(organisationType, TypePartenaireCodes.Assureur, StringComparison.OrdinalIgnoreCase))
+                query = query.Where(a => a.Partenaire == organisationCode || a.OCRE == organisationCode);
+            else if (TypePartenaireCodes.Intermediaires.Contains(organisationType ?? string.Empty))
+                query = query.Where(a => a.Intermediaire == organisationCode || a.OCRE == organisationCode);
+            else
+                query = query.Where(a => a.OCRE == organisationCode || a.PCRE == organisationCode);
+        }
 
-        // Recherche : Nom (ImportateurNom), NIU, NoPolice, NumeroCert
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
             query = query.Where(a =>
                 (a.ImportateurNom != null && a.ImportateurNom.Contains(term)) ||
                 (a.ImportateurNIU != null && a.ImportateurNIU.Contains(term)) ||
+                a.NumeroAFI.Contains(term) ||
                 (a.NoPolice != null && a.NoPolice.Contains(term)) ||
                 (a.NumeroCert != null && a.NumeroCert.Contains(term)));
         }
@@ -83,12 +89,7 @@ public class AssuranceRepository : IAssuranceRepository
 
         var totalCount = await query.CountAsync();
 
-        var items = await query
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        var items = await WithDetails(query)
             .Skip((page - 1) * perPage)
             .Take(perPage)
             .ToListAsync();
@@ -96,42 +97,34 @@ public class AssuranceRepository : IAssuranceRepository
         return (items, totalCount);
     }
 
-    public async Task<IEnumerable<Assurance>> GetByAssureurIdAsync(Guid assureurId)
+    public async Task<IEnumerable<Assurance>> GetByAssureurCodeAsync(string assureurCode)
     {
-        return await _context.Assurances
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        return await WithDetails(_context.Assurances)
             .Include(a => a.Primes)
-            .Where(a => a.AssureurId == assureurId)
+            .Where(a => a.Partenaire == assureurCode)
             .OrderByDescending(a => a.ModifierLe)
             .ToListAsync();
     }
 
-    public async Task<IEnumerable<Assurance>> GetByIntermediaireIdAsync(Guid intermediaireId)
+    public async Task<IEnumerable<Assurance>> GetByIntermediaireCodeAsync(string intermediaireCode)
     {
-        return await _context.Assurances
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        return await WithDetails(_context.Assurances)
             .Include(a => a.Primes)
-            .Where(a => a.IntermediaireId == intermediaireId)
+            .Where(a => a.Intermediaire == intermediaireCode)
             .OrderByDescending(a => a.ModifierLe)
             .ToListAsync();
     }
 
     public Task<Assurance> CreateAsync(Assurance assurance)
     {
-        assurance.Id = Guid.NewGuid();
+        if (assurance.Id == Guid.Empty)
+            assurance.Id = Guid.NewGuid();
+        if (string.IsNullOrWhiteSpace(assurance.NumeroAFI))
+            assurance.NumeroAFI = Assurance.GenererNumeroAFI(assurance.Id);
         assurance.CreerLe = DateTime.UtcNow;
         assurance.ModifierLe = DateTime.UtcNow;
 
         _context.Assurances.Add(assurance);
-        // Do not save here to allow adding transport modes; SaveChanges is called after
         return Task.FromResult(assurance);
     }
 
@@ -161,12 +154,7 @@ public class AssuranceRepository : IAssuranceRepository
 
     public async Task<Assurance?> GetByNoPoliceAsync(string noPolice)
     {
-        return await _context.Assurances
-            .Include(a => a.Garantie)
-            .Include(a => a.Maritime)
-            .Include(a => a.Aerien)
-            .Include(a => a.Routier)
-            .Include(a => a.Fluvial)
+        return await WithDetails(_context.Assurances)
             .Include(a => a.Primes)
             .FirstOrDefaultAsync(a => a.NoPolice == noPolice);
     }
@@ -180,16 +168,52 @@ public class AssuranceRepository : IAssuranceRepository
             .Select(a => a.NumeroCert)
             .FirstOrDefaultAsync();
     }
-    
+
+    public async Task<IReadOnlyDictionary<Guid, AssuranceLineConsumption>> GetLineConsumptionsAsync(
+        IReadOnlyCollection<Guid> sourceLineIds,
+        Guid? excludeAssuranceId = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (sourceLineIds.Count == 0)
+            return new Dictionary<Guid, AssuranceLineConsumption>();
+
+        var refusedStatuses = new[] { StatutAssuranceCodes.Refuse, StatutAssuranceCodes.RefuseSecondaire };
+        var consumptions = await _context.AssuranceLignes
+            .AsNoTracking()
+            .Where(l => sourceLineIds.Contains(l.SourceLigneDIId)
+                        && !refusedStatuses.Contains(l.Assurance.Etat)
+                        && (!excludeAssuranceId.HasValue || l.AssuranceId != excludeAssuranceId.Value))
+            .GroupBy(l => l.SourceLigneDIId)
+            .Select(group => new
+            {
+                SourceLineId = group.Key,
+                Quantite = group.Sum(l => l.Quantite ?? 0m),
+                MasseBrute = group.Sum(l => l.MasseBrute ?? 0m),
+                MasseNette = group.Sum(l => l.MasseNette ?? 0m),
+                Volume = group.Sum(l => l.Volume ?? 0m),
+                ValeurDevise = group.Sum(l => l.ValeurDevise ?? 0m),
+                ValeurXAF = group.Sum(l => l.ValeurXAF ?? 0m)
+            })
+            .ToListAsync(cancellationToken);
+
+        return consumptions.ToDictionary(
+            item => item.SourceLineId,
+            item => new AssuranceLineConsumption(
+                item.Quantite,
+                item.MasseBrute,
+                item.MasseNette,
+                item.Volume,
+                item.ValeurDevise,
+                item.ValeurXAF));
+    }
+
     public async Task AddVisaAssuranceAsync(VisaAssurance visaAssurance)
     {
         await _context.VisaAssurances.AddAsync(visaAssurance);
     }
-    
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
     }
 }
-
-

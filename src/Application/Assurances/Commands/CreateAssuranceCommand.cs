@@ -11,11 +11,12 @@ public record CreateAssuranceCommand : IRequest<Guid>
     public DateTime? DateFin { get; init; }
     public string TypeContrat { get; init; } = string.Empty;
     public string? Duree { get; init; }
-    /// <summary>Code module (ex: MA, AE, RO, FL). Obligatoire.</summary>
-    public string Module { get; init; } = string.Empty;
-    public Guid? AssureurId { get; init; }
-    public Guid? IntermediaireId { get; init; }
-    public Guid? GarantieId { get; init; }
+    /// <summary>Code mode de transport (ex: MA, AR, RO, FL). Obligatoire.</summary>
+    public string ModeDeTransport { get; init; } = string.Empty;
+    public string? Assureur { get; init; }
+    public string? Intermediaire { get; init; }
+    public string? TypePartenaire { get; init; }
+    public string? Garantie { get; init; }
     public string? OCRE { get; init; }
     public string? Statut { get; init; }
 
@@ -32,7 +33,7 @@ public record CreateAssuranceCommand : IRequest<Guid>
     public string? UniteStatistique { get; init; }
     public string? Marque { get; init; }
 
-    // Transport (fusionné)
+    // Transport (fusionné) — NomNavire/TypeNavire : MA et FL uniquement
     public string? NomTransporteur { get; init; }
     public string? NomNavire { get; init; }
     public string? TypeNavire { get; init; }
@@ -42,12 +43,16 @@ public record CreateAssuranceCommand : IRequest<Guid>
     public string? PaysDestination { get; init; }
 
     // Détails transport par module
-    public Guid? PortEmbarquement { get; init; }
-    public Guid? PortDebarquement { get; init; }
+    public string? PortEmbarquement { get; init; }
+    public string? PortDebarquement { get; init; }
     public string? AeroportEmbarquement { get; init; }
     public string? AeroportDebarquement { get; init; }
     public string? RouteNationale { get; init; }
+    /// <summary>Numéro de connaissement (BL) — mode maritime (MA) uniquement.</summary>
+    public string? NumeroBL { get; init; }
+    /// <summary>Numéro LTA (lettre de transport aérien) — mode aérien (AR) uniquement.</summary>
+    public string? NumeroLTA { get; init; }
+    /// <summary>Numéro de lettre de voiture — mode routier (RO) uniquement.</summary>
+    public string? NumeroLV { get; init; }
 }
-
-
 

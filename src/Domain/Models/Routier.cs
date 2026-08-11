@@ -7,11 +7,14 @@ namespace AssuranceService.Domain.Models;
 [Table("Routiers")]
 public class Routier : BaseModel
 {
-    [Required]
+    [MaxLength(50)]
+    public string? RouteNationaleCode { get; set; }
+
+    /// <summary>Numéro de lettre de voiture — routier uniquement.</summary>
     [MaxLength(255)]
-    public string RouteNationale { get; set; } = string.Empty;
+    public string? NumeroLV { get; set; }
 
     [Required]
-    public Guid AssuranceId { get; set; }
-    public virtual Assurance? Assurance { get; set; }
+    public Guid VoyageId { get; set; }
+    public virtual Voyage? Voyage { get; set; }
 }

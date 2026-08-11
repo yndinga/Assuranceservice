@@ -16,11 +16,11 @@ namespace AssuranceService.Domain.Models
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal ValeurFCFA { get; set; }
+        public decimal ValeurDevise { get; set; }
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal ValeurDevise { get; set; }
+        public decimal ValeurFCFA { get; set; }
 
         public decimal? PrimeNette { get; set; }
 

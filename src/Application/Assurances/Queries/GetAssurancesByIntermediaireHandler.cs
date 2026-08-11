@@ -15,7 +15,7 @@ public class GetAssurancesByIntermediaireHandler : IRequestHandler<GetAssurances
 
     public async Task<IEnumerable<AssuranceDto>> Handle(GetAssurancesByIntermediaireQuery request, CancellationToken cancellationToken)
     {
-        var assurances = await _assuranceRepository.GetByIntermediaireIdAsync(request.IntermediaireId);
+        var assurances = await _assuranceRepository.GetByIntermediaireCodeAsync(request.IntermediaireCode);
         return assurances.ToDtoList();
     }
 }

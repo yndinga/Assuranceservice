@@ -31,7 +31,7 @@ public class AssuranceCreatedConsumer : IConsumer<AssuranceCreatedEvent>
             }
 
             // Mettre à jour le statut de l'assurance
-            assurance.Statut = StatutAssuranceCodes.Elaboré;
+            assurance.Etat = StatutAssuranceCodes.Elaboré;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogInformation("Assurance {AssuranceId} status updated to Created", context.Message.AssuranceId);

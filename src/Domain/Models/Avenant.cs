@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using AssuranceService.Domain.Constants;
 using AssuranceService.Domain.Models.Commons;
 
 namespace AssuranceService.Domain.Models;

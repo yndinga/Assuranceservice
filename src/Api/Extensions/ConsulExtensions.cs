@@ -17,6 +17,11 @@ public static class ConsulExtensions
         configuration.GetSection("Consul").Bind(consulConfig);
         
         services.AddSingleton(consulConfig);
+        if (string.IsNullOrWhiteSpace(consulConfig.Host))
+        {
+            return services;
+        }
+
         services.AddSingleton<IConsulClient, ConsulClient>(p => 
             new ConsulClient(config => 
             {
@@ -29,8 +34,15 @@ public static class ConsulExtensions
     public static IApplicationBuilder UseConsulServiceDiscovery(
         this IApplicationBuilder app)
     {
-        var consulClient = app.ApplicationServices.GetRequiredService<IConsulClient>();
         var consulConfig = app.ApplicationServices.GetRequiredService<ConsulConfig>();
+        if (string.IsNullOrWhiteSpace(consulConfig.Host))
+        {
+            var disabledLogger = app.ApplicationServices.GetRequiredService<ILogger<IConsulClient>>();
+            disabledLogger.LogInformation("Consul désactivé : aucune adresse Consul configurée.");
+            return app;
+        }
+
+        var consulClient = app.ApplicationServices.GetRequiredService<IConsulClient>();
         var lifetime = app.ApplicationServices.GetRequiredService<IHostApplicationLifetime>();
         var logger = app.ApplicationServices.GetRequiredService<ILogger<IConsulClient>>();
 
@@ -103,7 +115,6 @@ public static class ConsulExtensions
         return app;
     }
 }
-
 
 
 

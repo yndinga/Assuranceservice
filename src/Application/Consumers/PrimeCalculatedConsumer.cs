@@ -51,7 +51,7 @@ public class PrimeCalculatedConsumer : IConsumer<PrimeCalculatedEvent>
             await _primeRepository.CreateAsync(prime);
 
             // Mettre à jour le statut de l'assurance
-            assurance.Statut = StatutAssuranceCodes.Elaboré;
+            assurance.Etat = StatutAssuranceCodes.Elaboré;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogInformation("Prime created and Assurance {AssuranceId} status updated to PrimeCalculated", context.Message.AssuranceId);

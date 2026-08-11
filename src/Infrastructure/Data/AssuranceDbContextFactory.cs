@@ -14,6 +14,6 @@ public class AssuranceDbContextFactory : IDesignTimeDbContextFactory<AssuranceDb
         
         optionsBuilder.UseSqlServer(connectionString);
         
-        return new AssuranceDbContext(optionsBuilder.Options);
+        return new AssuranceDbContext(optionsBuilder.Options, new DesignTimeCurrentUserService());
     }
 }

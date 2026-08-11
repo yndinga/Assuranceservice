@@ -14,6 +14,8 @@ public interface IPartenaireService
     /// Obtient les informations complètes du partenaire
     /// </summary>
     Task<PartenaireDto?> GetPartenaireAsync(Guid partenaireId);
+
+    Task<OrganisationDto?> GetOrganisationAsync(string organisationCode);
 }
 
 public record PartenaireDto
@@ -21,6 +23,13 @@ public record PartenaireDto
     public Guid Id { get; init; }
     public string Nom { get; init; } = string.Empty;
     public string Code { get; init; } = string.Empty;
+}
+
+public record OrganisationDto
+{
+    public string Code { get; init; } = string.Empty;
+    public string? Sigle { get; init; }
+    public string Name { get; init; } = string.Empty;
 }
 
 

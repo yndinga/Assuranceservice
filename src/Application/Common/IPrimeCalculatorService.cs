@@ -16,6 +16,7 @@ public record PrimeCalculationRequest
     public Guid AssuranceId { get; init; }
     public Guid GarantieId { get; init; }
     public decimal ValeurDevise { get; init; }
+    public decimal? ValeurFCFA { get; init; }
     public string Devise { get; init; } = string.Empty;
 }
 

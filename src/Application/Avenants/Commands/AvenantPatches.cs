@@ -11,7 +11,6 @@ public class AvenantAssurancePatch
     public DateTime? DateFin { get; set; }
     public string? TypeContrat { get; set; }
     public string? Duree { get; set; }
-    public string? Module { get; set; }
-    public Guid? GarantieId { get; set; }
+    public string? ModeDeTransport { get; set; }
+    public string? Garantie { get; set; }
 }
-

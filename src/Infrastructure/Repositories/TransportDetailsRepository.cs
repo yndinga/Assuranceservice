@@ -13,6 +13,13 @@ public class TransportDetailsRepository : ITransportDetailsRepository
         _context = context;
     }
 
+    public async Task<Voyage> AddVoyageAsync(Voyage voyage, CancellationToken cancellationToken = default)
+    {
+        voyage.Id = Guid.NewGuid();
+        await _context.Voyages.AddAsync(voyage, cancellationToken);
+        return voyage;
+    }
+
     public Task AddMaritimeAsync(Maritime maritime, CancellationToken cancellationToken = default)
         => _context.Maritimes.AddAsync(maritime, cancellationToken).AsTask();
 

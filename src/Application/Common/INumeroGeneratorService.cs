@@ -6,8 +6,8 @@ namespace AssuranceService.Application.Common;
 public interface INumeroGeneratorService
 {
     /// <summary>
-    /// Génère le numéro de police: {CodePartenaire}{Compteur}{JJMMAA}
-    /// Exemple: SUN100001051125
+    /// Genere le numero de police: {CodeAssureur}{Compteur}{AAMM}
+    /// Exemple: AMC0000012607
     /// </summary>
     Task<string> GenerateNoPoliceLAsync(string codePartenaire);
     

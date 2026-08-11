@@ -28,11 +28,12 @@ public class PrimeCalculatorService : IPrimeCalculatorService
     /// </summary>
     public async Task<PrimeCalculationResult> CalculerPrimeAsync(PrimeCalculationRequest request)
     {
-        // 1. Obtenir le taux de change
-        var tauxChange = await _tauxChangeService.GetTauxChangeAsync(request.Devise);
-
-        // 2. Convertir en FCFA
-        var valeurFCFA = request.ValeurDevise * tauxChange;
+        var valeurFCFA = request.ValeurFCFA.GetValueOrDefault();
+        if (valeurFCFA <= 0)
+        {
+            var tauxChange = await _tauxChangeService.GetTauxChangeAsync(request.Devise);
+            valeurFCFA = request.ValeurDevise * tauxChange;
+        }
 
         // 3. Obtenir les infos de garantie
         var garantie = await _garantieRepository.GetByIdAsync(request.GarantieId);
@@ -89,4 +90,3 @@ public class PrimeCalculatorService : IPrimeCalculatorService
         return prime;
     }
 }
-

@@ -1,14 +1,9 @@
-using AssuranceService.Application.Common;
+﻿using AssuranceService.Application.Common;
 using AssuranceService.Domain.Constants;
-using AssuranceService.Domain.Models;
 using MediatR;
 
 namespace AssuranceService.Application.Assurances.Commands;
 
-/// <summary>
-/// L'intermédiaire choisit l'assureur pour une demande reçue. AssureurId est renseigné ici ;
-/// l'assureur pourra accepter ou refuser plus tard (signature).
-/// </summary>
 public class ChoisirAssureurHandler : IRequestHandler<ChoisirAssureurCommand, Unit>
 {
     private readonly IAssuranceRepository _assuranceRepository;
@@ -22,21 +17,35 @@ public class ChoisirAssureurHandler : IRequestHandler<ChoisirAssureurCommand, Un
     {
         var assurance = await _assuranceRepository.GetByIdAsync(request.AssuranceId);
         if (assurance == null)
+        {
             throw new InvalidOperationException($"Assurance {request.AssuranceId} introuvable.");
+        }
 
-        if (!assurance.IntermediaireId.HasValue)
-            throw new InvalidOperationException("Cette assurance n'a pas été envoyée à un intermédiaire ; le choix d'assureur ne s'applique pas.");
+        if (string.IsNullOrWhiteSpace(assurance.Intermediaire))
+        {
+            throw new InvalidOperationException("Cette assurance n'a pas ete envoyee a un intermediaire ; le choix d'assureur ne s'applique pas.");
+        }
 
-        if (assurance.AssureurId.HasValue)
-            throw new InvalidOperationException("Un assureur a déjà été choisi pour cette demande.");
+        if (!string.IsNullOrWhiteSpace(assurance.Partenaire))
+        {
+            throw new InvalidOperationException("Un assureur a deja ete choisi pour cette demande.");
+        }
 
-        if (assurance.Statut != StatutAssuranceCodes.Elaboré)
-            throw new InvalidOperationException($"Seules les demandes au statut Elaboré (10) peuvent recevoir un choix d'assureur. Statut actuel : {assurance.Statut}.");
+        if (!StatutAssuranceCodes.IsElabore(assurance.Etat))
+        {
+            throw new InvalidOperationException($"Seules les demandes au statut Elabore (42) peuvent recevoir un choix d'assureur. Statut actuel : {assurance.Etat}.");
+        }
 
-        assurance.AssureurId = request.AssureurId;
+        if (string.IsNullOrWhiteSpace(request.Assureur))
+        {
+            throw new InvalidOperationException("Assureur invalide.");
+        }
+
+        assurance.Partenaire = request.Assureur.Trim();
         assurance.ModifierLe = DateTime.UtcNow;
         await _assuranceRepository.UpdateAsync(assurance);
 
         return Unit.Value;
     }
 }
+

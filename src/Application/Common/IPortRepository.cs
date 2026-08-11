@@ -4,4 +4,5 @@ namespace AssuranceService.Application.Common;
 public interface IPortRepository
 {
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Guid?> GetIdByCodeAsync(string? code, string? type = null, CancellationToken cancellationToken = default);
 }

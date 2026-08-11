@@ -4,9 +4,11 @@ using AssuranceService.Domain.Models.Commons;
 
 namespace AssuranceService.Domain.Models.Referentiel;
 
-[Table("Modules")]
-public class Module : BaseModel
+[Table("RoutesNationales")]
+public class RouteNationale : BaseModel
 {
+    [Required]
+    [MaxLength(20)]
     public string Code { get; set; } = string.Empty;
 
     [Required]

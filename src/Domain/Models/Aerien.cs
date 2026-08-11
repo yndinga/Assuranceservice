@@ -7,14 +7,17 @@ namespace AssuranceService.Domain.Models;
 [Table("Aeriens")]
 public class Aerien : BaseModel
 {
-    [Required]
-    [MaxLength(255)]
-    public string AeroportEmbarquement { get; set; } = string.Empty;
+    [MaxLength(50)]
+    public string? AeroportEmbarquementCode { get; set; }
 
+    [MaxLength(50)]
+    public string? AeroportDebarquementCode { get; set; }
+
+    /// <summary>Numéro de lettre de transport aérien (LTA / AWB) — aérien uniquement.</summary>
     [MaxLength(255)]
-    public string? AeroportDebarquement { get; set; }
+    public string? NumeroLTA { get; set; }
 
     [Required]
-    public Guid AssuranceId { get; set; }
-    public virtual Assurance? Assurance { get; set; }
+    public Guid VoyageId { get; set; }
+    public virtual Voyage? Voyage { get; set; }
 }

@@ -29,6 +29,25 @@ public class PrimeRepository : IPrimeRepository
 
     public async Task<Prime> CreateAsync(Prime prime)
     {
+        var existing = await _context.Primes
+            .OrderByDescending(item => item.ModifierLe ?? item.CreerLe)
+            .FirstOrDefaultAsync(item => item.AssuranceId == prime.AssuranceId);
+        if (existing is not null)
+        {
+            existing.Taux = prime.Taux;
+            existing.ValeurFCFA = prime.ValeurFCFA;
+            existing.ValeurDevise = prime.ValeurDevise;
+            existing.PrimeNette = prime.PrimeNette;
+            existing.Accessoires = prime.Accessoires;
+            existing.Taxe = prime.Taxe;
+            existing.PrimeTotale = prime.PrimeTotale;
+            existing.Statut = prime.Statut;
+            existing.ModifierPar = prime.ModifierPar;
+            existing.ModifierLe = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return existing;
+        }
+
         prime.Id = Guid.NewGuid();
         prime.CreerLe = DateTime.UtcNow;
         prime.ModifierLe = DateTime.UtcNow;
@@ -62,5 +81,4 @@ public class PrimeRepository : IPrimeRepository
             .AnyAsync(p => p.Id == id);
     }
 }
-
 

@@ -1,21 +1,17 @@
 using MassTransit;
 using MassTransit.EntityFrameworkCoreIntegration;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using AssuranceService.Application.Sagas;
 using AssuranceService.Application.Consumers;
 using AssuranceService.Domain.Events;
 using AssuranceService.Infrastructure.Data;
+using AssuranceService.Infrastructure.Messaging.Consumers;
 
 namespace AssuranceService.Infrastructure.Messaging;
 
 public static class MassTransitConfiguration
 {
-    /// <summary>
-    /// Enregistre MassTransit : RabbitMQ si configuré (RabbitMQ__ConnectionString non vide et RabbitMQ__Enabled != false),
-    /// sinon transport In-Memory pour que l'app démarre sans broker externe.
-    /// </summary>
     public static IServiceCollection AddMassTransitWithRabbitMq(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -23,11 +19,14 @@ public static class MassTransitConfiguration
         var rabbitMqSettings = configuration.GetSection("RabbitMQ");
         var connectionString = (rabbitMqSettings["ConnectionString"] ?? "").Trim();
         var enabled = rabbitMqSettings.GetValue<bool>("Enabled");
-        // RabbitMQ uniquement si explicitement activé ET chaîne de connexion fournie (sinon In-Memory)
-        var useRabbitMq = enabled && !string.IsNullOrEmpty(connectionString);
+        var referentielOptions = ReferentielMessagingOptions.Bind(configuration);
+        var useRabbitMq = (enabled && !string.IsNullOrEmpty(connectionString))
+            || referentielOptions.Enabled;
 
         services.AddMassTransit(x =>
         {
+            x.SetEndpointNameFormatter(new KebabCaseEndpointNameFormatter("AssuranceService", false));
+
             x.AddSagaStateMachine<AssuranceProcessStateMachine, AssuranceProcessState>()
                 .EntityFrameworkRepository(r =>
                 {
@@ -40,17 +39,33 @@ public static class MassTransitConfiguration
             x.AddConsumer<AssuranceProcessCompletedConsumer>();
             x.AddConsumer<AssuranceProcessFailedConsumer>();
 
+            if (referentielOptions.Enabled)
+                x.AddReferentielConsumers();
+
             if (useRabbitMq)
             {
                 x.UsingRabbitMq((context, cfg) =>
                 {
-                    cfg.Host(connectionString);
+                    if (!string.IsNullOrEmpty(connectionString))
+                        cfg.Host(connectionString);
+                    else
+                    {
+                        var mq = referentielOptions.RabbitMq;
+                        cfg.Host(mq.Host, (ushort)mq.Port, "/", h =>
+                        {
+                            h.Username(mq.User);
+                            h.Password(mq.Password);
+                        });
+                    }
+
                     cfg.ConfigureEndpoints(context);
                     cfg.Message<AssuranceProcessStartedEvent>(e => e.SetEntityName("assurance.process.started"));
                     cfg.Message<AssuranceCreatedEvent>(e => e.SetEntityName("assurance.created"));
                     cfg.Message<PrimeCalculatedEvent>(e => e.SetEntityName("prime.calculated"));
                     cfg.Message<AssuranceProcessCompletedEvent>(e => e.SetEntityName("assurance.process.completed"));
                     cfg.Message<AssuranceProcessFailedEvent>(e => e.SetEntityName("assurance.process.failed"));
+                    cfg.Message<AssuranceSubmittedEvent>(e => e.SetEntityName("assurance.submitted"));
+                    cfg.Message<AssuranceSignedEvent>(e => e.SetEntityName("assurance.signed"));
                     cfg.UseMessageRetry(r => r.Interval(3, TimeSpan.FromSeconds(5)));
                     cfg.UseInMemoryOutbox(context);
                 });
@@ -68,4 +83,3 @@ public static class MassTransitConfiguration
         return services;
     }
 }
-

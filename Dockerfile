@@ -1,17 +1,25 @@
 # syntax=docker/dockerfile:1
-# Image .NET 8 — API AssuranceService
+# Contexte de build : racine microservice (D:\dev_netcore\microservice)
+#   docker build -f AssuranceService/Dockerfile -t ... .
+
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
-COPY ["AssuranceService.sln", "./"]
-COPY ["src/Api/AssuranceService.Api.csproj", "src/Api/"]
-COPY ["src/Application/AssuranceService.Application.csproj", "src/Application/"]
-COPY ["src/Domain/AssuranceService.Domain.csproj", "src/Domain/"]
-COPY ["src/Infrastructure/AssuranceService.Infrastructure.csproj", "src/Infrastructure/"]
+# Contrats référentiel (projet partagé)
+COPY ["ReferentielService/src/Contracts/ReferentielService.Contracts.csproj", "ReferentielService/src/Contracts/"]
+COPY ["ReferentielService/src/Contracts/Events.cs", "ReferentielService/src/Contracts/"]
+COPY ["ReferentielService/src/Contracts/Events/", "ReferentielService/src/Contracts/Events/"]
 
+COPY ["AssuranceService/AssuranceService.sln", "AssuranceService/"]
+COPY ["AssuranceService/src/Api/AssuranceService.Api.csproj", "AssuranceService/src/Api/"]
+COPY ["AssuranceService/src/Application/AssuranceService.Application.csproj", "AssuranceService/src/Application/"]
+COPY ["AssuranceService/src/Domain/AssuranceService.Domain.csproj", "AssuranceService/src/Domain/"]
+COPY ["AssuranceService/src/Infrastructure/AssuranceService.Infrastructure.csproj", "AssuranceService/src/Infrastructure/"]
+
+WORKDIR /src/AssuranceService
 RUN dotnet restore "src/Api/AssuranceService.Api.csproj"
 
-COPY src/ src/
+COPY AssuranceService/src/ src/
 RUN dotnet publish "src/Api/AssuranceService.Api.csproj" \
     -c Release \
     -o /app/publish \
@@ -21,11 +29,9 @@ RUN dotnet publish "src/Api/AssuranceService.Api.csproj" \
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 
-# Port HTTP (aligné avec ASP.NET Core en conteneur)
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-# Exécution non-root (utilisateur fourni par l’image aspnet)
 USER app
 
 COPY --from=build /app/publish .

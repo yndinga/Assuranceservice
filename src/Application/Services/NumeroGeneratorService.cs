@@ -3,7 +3,7 @@ using AssuranceService.Application.Common;
 namespace AssuranceService.Application.Services;
 
 /// <summary>
-/// Service de génération des numéros de police et certificat
+/// Service de generation des numeros de police et certificat.
 /// </summary>
 public class NumeroGeneratorService : INumeroGeneratorService
 {
@@ -16,42 +16,36 @@ public class NumeroGeneratorService : INumeroGeneratorService
     }
 
     /// <summary>
-    /// Génère le NoPolice: {CodePartenaire}{Compteur}{JJMMAA}
-    /// Exemple: SUN100001051125
+    /// Genere le NoPolice: {CodeAssureur}{Compteur}{AAMM}. Exemple: AMC0000012607.
     /// </summary>
     public async Task<string> GenerateNoPoliceLAsync(string codePartenaire)
     {
+        var codeAssureur = NormalizeAssureurCode(codePartenaire);
         var compteur = await GetNextCompteurAsync();
-        var date = DateTime.Now;
-        var dateFormat = date.ToString("ddMMyy"); // JJMMAA
-        
-        return $"{codePartenaire}{compteur:D6}{dateFormat}";
+        var dateFormat = DateTime.Now.ToString("yyMM");
+
+        return $"{codeAssureur}{compteur:D6}{dateFormat}";
     }
 
     /// <summary>
-    /// Génère le NumeroCert selon la formule: {Compteur:D6}{AAMMJJ}
-    /// Exemple: 000120260719  (compteur=000120, année=26, mois=07, jour=19)
-    /// L'année (2 chiffres) garantit qu'aucun doublon ne peut survenir d'une année à l'autre,
-    /// même si la BD était réinitialisée. La contrainte UNIQUE en base reste le filet de sécurité final.
+    /// Genere le NumeroCert sans dependance a l'assureur: {Compteur:D6}{AAMMJJ}.
     /// </summary>
     public async Task<string> GenerateNumeroCertAsync()
     {
         await _semaphore.WaitAsync();
         try
         {
-            var jour = DateTime.Now.ToString("yyMMdd"); // AAMMJJ — ex: "260219" pour le 19 février 2026
-
+            var jour = DateTime.Now.ToString("yyMMdd");
             var lastNumeroCert = await _assuranceRepository.GetLastNumeroCertAsync();
 
             int prochainCompteur;
             if (string.IsNullOrEmpty(lastNumeroCert))
             {
-                prochainCompteur = 1; // premier enregistrement → "000001"
+                prochainCompteur = 1;
             }
             else
             {
-                // Extraire les 6 premiers chiffres (séquence) et incrémenter
-                prochainCompteur = int.Parse(lastNumeroCert.Substring(0, 6)) + 1;
+                prochainCompteur = int.Parse(lastNumeroCert[..6]) + 1;
             }
 
             return prochainCompteur.ToString("D6") + jour;
@@ -62,15 +56,12 @@ public class NumeroGeneratorService : INumeroGeneratorService
         }
     }
 
-    /// <summary>
-    /// Obtient le prochain compteur disponible pour le NoPolice (thread-safe).
-    /// </summary>
     public async Task<int> GetNextCompteurAsync()
     {
         await _semaphore.WaitAsync();
         try
         {
-            return await GetDernierCompteurNoPolicAsync() + 1;
+            return await GetDernierCompteurNoPoliceAsync() + 1;
         }
         finally
         {
@@ -78,23 +69,41 @@ public class NumeroGeneratorService : INumeroGeneratorService
         }
     }
 
-    private async Task<int> GetDernierCompteurNoPolicAsync()
+    private async Task<int> GetDernierCompteurNoPoliceAsync()
     {
         var assurances = await _assuranceRepository.GetAllAsync();
 
         var dernierCompteur = assurances
-            .Where(a => !string.IsNullOrEmpty(a.NoPolice) && a.NoPolice.Length >= 9)
+            .Where(a => !string.IsNullOrWhiteSpace(a.NoPolice) && a.NoPolice.Length >= 13)
             .Select(a =>
             {
-                // NoPolice format: {CodePartenaire(3)}{Compteur(6)}{JJMMAA(6)}
-                if (int.TryParse(a.NoPolice!.Substring(3, 6), out var c)) return (int?)c;
+                if (int.TryParse(a.NoPolice![3..9], out var compteur))
+                {
+                    return (int?)compteur;
+                }
+
                 return null;
             })
-            .Where(c => c.HasValue)
-            .OrderByDescending(c => c!.Value)
+            .Where(compteur => compteur.HasValue)
+            .OrderByDescending(compteur => compteur!.Value)
             .FirstOrDefault();
 
-        return dernierCompteur ?? 100000; // Démarre à 100001
+        return dernierCompteur ?? 0;
+    }
+
+    private static string NormalizeAssureurCode(string codePartenaire)
+    {
+        var normalized = new string((codePartenaire ?? string.Empty)
+            .Trim()
+            .ToUpperInvariant()
+            .Where(char.IsLetterOrDigit)
+            .ToArray());
+
+        if (normalized.Length < 3)
+        {
+            throw new InvalidOperationException("Le code assureur doit contenir au moins 3 caracteres.");
+        }
+
+        return normalized[..3];
     }
 }
-

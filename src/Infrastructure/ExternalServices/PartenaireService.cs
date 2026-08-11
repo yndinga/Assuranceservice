@@ -54,6 +54,36 @@ public class PartenaireService : IPartenaireService
             throw new InvalidOperationException($"Impossible de contacter le service Partenaires: {ex.Message}", ex);
         }
     }
+
+    public async Task<OrganisationDto?> GetOrganisationAsync(string organisationCode)
+    {
+        if (string.IsNullOrWhiteSpace(organisationCode))
+        {
+            return null;
+        }
+
+        try
+        {
+            var code = Uri.EscapeDataString(organisationCode.Trim());
+            var response = await _httpClient.GetAsync($"{_partenaireServiceUrl}/api/v1/organisations/{code}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    return null;
+                }
+
+                throw new HttpRequestException($"Erreur lors de l'appel au service Organisations: {response.StatusCode}");
+            }
+
+            return await response.Content.ReadFromJsonAsync<OrganisationDto>();
+        }
+        catch (HttpRequestException ex)
+        {
+            throw new InvalidOperationException($"Impossible de contacter le service Organisations: {ex.Message}", ex);
+        }
+    }
 }
 
 

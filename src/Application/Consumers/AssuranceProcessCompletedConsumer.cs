@@ -30,7 +30,7 @@ public class AssuranceProcessCompletedConsumer : IConsumer<AssuranceProcessCompl
             }
 
             // Mettre à jour le statut final de l'assurance
-            assurance.Statut = context.Message.Statut;
+            assurance.Etat = context.Message.Statut;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogInformation("Assurance {AssuranceId} process completed with Statut {Statut}", 

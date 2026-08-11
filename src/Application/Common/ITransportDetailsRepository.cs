@@ -4,6 +4,7 @@ namespace AssuranceService.Application.Common;
 
 public interface ITransportDetailsRepository
 {
+    Task<Voyage> AddVoyageAsync(Voyage voyage, CancellationToken cancellationToken = default);
     Task AddMaritimeAsync(Maritime maritime, CancellationToken cancellationToken = default);
     Task AddAerienAsync(Aerien aerien, CancellationToken cancellationToken = default);
     Task AddRoutierAsync(Routier routier, CancellationToken cancellationToken = default);

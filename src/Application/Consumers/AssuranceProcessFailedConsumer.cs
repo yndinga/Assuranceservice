@@ -32,7 +32,7 @@ public class AssuranceProcessFailedConsumer : IConsumer<AssuranceProcessFailedEv
             }
 
             // Mettre à jour le statut de l'assurance en échec
-            assurance.Statut = StatutAssuranceCodes.ModificationDemandée;
+            assurance.Etat = StatutAssuranceCodes.ModificationDemandée;
             await _assuranceRepository.UpdateAsync(assurance);
 
             _logger.LogError("Assurance {AssuranceId} process failed: {ErrorMessage} (Code: {ErrorCode})", 

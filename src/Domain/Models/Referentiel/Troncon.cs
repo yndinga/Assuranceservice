@@ -13,9 +13,5 @@ public class Troncon : BaseModel
     [MaxLength(100)]
     public string Description { get; set; } = string.Empty;
 
-    public Guid CorridorId { get; set; }
-
-    public Guid RouteId { get; set; }
-
     public bool Actif { get; set; } = true;
 }

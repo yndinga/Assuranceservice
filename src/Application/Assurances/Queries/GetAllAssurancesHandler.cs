@@ -22,9 +22,8 @@ public class GetAllAssurancesHandler : IRequestHandler<GetAllAssurancesQuery, Pa
             request.Search,
             page,
             perPage,
-            request.Ocre,
-            request.IntermediaireId,
-            request.AssureurId);
+            request.OrganisationCode,
+            request.OrganisationType);
 
         var data = items.ToDtoList().ToList();
         return new PagedResult<AssuranceDto>
