@@ -19,11 +19,11 @@ public record UpdateAssuranceCommand : IRequest<Unit>
     public string? TypePartenaire { get; init; }
     public string? Garantie { get; init; }
     public string NomTransporteur { get; init; } = string.Empty;
+    public string? Transit { get; init; }
     public string? NomNavire { get; init; }
     public string? TypeNavire { get; init; }
     public string ModifierPar { get; init; } = string.Empty;
 }
-
 
 
 

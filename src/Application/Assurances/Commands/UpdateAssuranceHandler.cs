@@ -54,6 +54,8 @@ public class UpdateAssuranceHandler : IRequestHandler<UpdateAssuranceCommand, Un
             assurance.Voyage.NomTransporteur = request.NomTransporteur ?? assurance.Voyage.NomTransporteur;
         }
 
+        assurance.Voyage.Transit = NormalizeOptional(request.Transit);
+
         assurance.Voyage.ApplyNavireDetails(modeDeTransport, request.NomNavire, request.TypeNavire);
 
         assurance.GarantieId = ParseOptionalGuid(request.Garantie) ?? assurance.GarantieId;
@@ -89,5 +91,4 @@ public class UpdateAssuranceHandler : IRequestHandler<UpdateAssuranceCommand, Un
         return int.TryParse(value?.Trim(), out var days) && days > 0 ? days : null;
     }
 }
-
 

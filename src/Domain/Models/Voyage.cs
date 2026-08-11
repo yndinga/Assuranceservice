@@ -16,11 +16,8 @@ public class Voyage : BaseModel
     [MaxLength(255)]
     public string NomTransporteur { get; set; } = string.Empty;
 
-    [MaxLength(255)]
-    public string? LieuSejour { get; set; }
-
-    [MaxLength(50)]
-    public string? DureeSejour { get; set; }
+    [MaxLength(350)]
+    public string? Transit { get; set; }
 
     [Required]
     [MaxLength(255)]

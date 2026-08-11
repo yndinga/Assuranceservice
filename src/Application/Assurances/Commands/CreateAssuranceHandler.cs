@@ -71,8 +71,7 @@ public class CreateAssuranceHandler : IRequestHandler<CreateAssuranceCommand, Gu
         {
             AssuranceId = createdAssurance.Id,
             NomTransporteur = request.NomTransporteur ?? string.Empty,
-            LieuSejour = request.LieuSejour,
-            DureeSejour = request.DureeSejour,
+            Transit = request.Transit,
             PaysProvenance = request.PaysProvenance ?? string.Empty,
             PaysDestination = request.PaysDestination ?? string.Empty,
             Designation = request.Designation ?? string.Empty,

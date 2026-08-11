@@ -52,8 +52,7 @@ public class CreateAssuranceValidator : AbstractValidator<CreateAssuranceCommand
             .NotEmpty().When(x => IsMaritimeOrFluvial(x.ModeDeTransport))
             .WithMessage("TypeNavire requis pour MA et FL.")
             .MaximumLength(100);
-        RuleFor(x => x.LieuSejour).MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.LieuSejour));
-        RuleFor(x => x.DureeSejour).MaximumLength(50).When(x => !string.IsNullOrWhiteSpace(x.DureeSejour));
+        RuleFor(x => x.Transit).MaximumLength(350).When(x => !string.IsNullOrWhiteSpace(x.Transit));
         RuleFor(x => x.PaysProvenance).MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.PaysProvenance));
         RuleFor(x => x.PaysDestination).MaximumLength(255).When(x => !string.IsNullOrWhiteSpace(x.PaysDestination));
 

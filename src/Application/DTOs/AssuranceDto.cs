@@ -61,8 +61,7 @@ public record AssuranceDto
     public string? NomTransporteur { get; init; }
     public string? NomNavire { get; init; }
     public string? TypeNavire { get; init; }
-    public string? LieuSejour { get; init; }
-    public string? DureeSejour { get; init; }
+    public string? Transit { get; init; }
     public string? PaysProvenance { get; init; }
     public string? PaysDestination { get; init; }
     public string? PaysEmbarquementCode { get; init; }

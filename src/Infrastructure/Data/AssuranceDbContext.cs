@@ -191,8 +191,7 @@ public class AssuranceDbContext : DbContext
             entity.ToTable("Voyages");
             entity.HasKey(v => v.Id);
             entity.Property(v => v.NomTransporteur).IsRequired().HasMaxLength(255);
-            entity.Property(v => v.LieuSejour).HasMaxLength(255);
-            entity.Property(v => v.DureeSejour).HasMaxLength(50);
+            entity.Property(v => v.Transit).HasMaxLength(350);
             entity.Property(v => v.PaysProvenance).IsRequired().HasMaxLength(255);
             entity.Property(v => v.PaysDestination).IsRequired().HasMaxLength(255);
             entity.Property(v => v.Designation).HasMaxLength(255);

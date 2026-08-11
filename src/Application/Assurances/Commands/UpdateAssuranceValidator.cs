@@ -38,6 +38,9 @@ public class UpdateAssuranceValidator : AbstractValidator<UpdateAssuranceCommand
         RuleFor(x => x.NomTransporteur)
             .MaximumLength(250).When(x => !string.IsNullOrWhiteSpace(x.NomTransporteur));
 
+        RuleFor(x => x.Transit)
+            .MaximumLength(350).When(x => !string.IsNullOrWhiteSpace(x.Transit));
+
         RuleFor(x => x.NomNavire)
             .NotEmpty()
             .When(x => IsMaritimeOrFluvial(x.ModeDeTransport))

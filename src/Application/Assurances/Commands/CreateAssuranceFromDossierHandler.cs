@@ -104,8 +104,7 @@ public sealed class CreateAssuranceFromDossierHandler : IRequestHandler<CreateAs
         {
             AssuranceId = createdAssurance.Id,
             NomTransporteur = NormalizeOptional(request.NomTransporteur) ?? string.Empty,
-            LieuSejour = NormalizeOptional(request.LieuSejour),
-            DureeSejour = NormalizeOptional(request.DureeSejour),
+            Transit = NormalizeOptional(request.Transit),
             PaysProvenance = commande.PaysProvenance ?? string.Empty,
             PaysDestination = commande.PaysDestination ?? string.Empty,
             Designation = NormalizeOptional(ligne?.Designation) ?? commande.Intitule ?? string.Empty,

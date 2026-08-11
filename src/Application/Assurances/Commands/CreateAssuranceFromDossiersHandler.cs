@@ -298,8 +298,7 @@ public sealed class CreateAssuranceFromDossiersHandler
         {
             AssuranceId = assurance.Id,
             NomTransporteur = NormalizeOptional(request.NomTransporteur) ?? string.Empty,
-            LieuSejour = NormalizeOptional(request.LieuSejour),
-            DureeSejour = NormalizeOptional(request.DureeSejour),
+            Transit = NormalizeOptional(request.Transit),
             PaysProvenance = GetCountryCode(firstSource.Commande),
             PaysDestination = firstSource.Commande.PaysDestination ?? string.Empty,
             Designation = firstSource.Ligne.Designation ?? firstSource.Commande.Intitule ?? string.Empty,
