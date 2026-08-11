@@ -1,4 +1,5 @@
 using AssuranceService.Application.Common;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 
@@ -17,13 +18,32 @@ public class PartenaireService : IPartenaireService
     ];
 
     private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly string _partenaireServiceUrl;
 
-    public PartenaireService(HttpClient httpClient, IConfiguration configuration)
+    public PartenaireService(
+        HttpClient httpClient,
+        IHttpContextAccessor httpContextAccessor,
+        IConfiguration configuration)
     {
         _httpClient = httpClient;
-        _partenaireServiceUrl = configuration["ExternalServices:PartenaireServiceUrl"] 
+        _httpContextAccessor = httpContextAccessor;
+        var configuredUrl = configuration["ExternalServices:PartenaireServiceUrl"]
             ?? throw new InvalidOperationException("PartenaireServiceUrl not configured");
+
+        // L'adresse localhost du fichier appsettings ne peut pas fonctionner depuis Portainer.
+        // En conteneur, la Gateway reste le point d'entree de secours si la variable de stack est absente.
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"),
+                "true",
+                StringComparison.OrdinalIgnoreCase)
+            && configuredUrl.StartsWith("http://localhost", StringComparison.OrdinalIgnoreCase))
+        {
+            configuredUrl = configuration["ExternalServices:OrganisationGatewayUrl"]
+                ?? "http://192.168.2.89:5000/organisation";
+        }
+
+        _partenaireServiceUrl = configuredUrl.TrimEnd('/');
     }
 
     public async Task<string> GetCodePartenaireAsync(Guid partenaireId)
@@ -74,7 +94,7 @@ public class PartenaireService : IPartenaireService
         {
             var code = Uri.EscapeDataString(organisationCode.Trim());
             using var response = await GetWithConnectionRetryAsync(
-                $"{_partenaireServiceUrl}/api/v1/organisations/{code}");
+                BuildOrganisationUrl(code));
 
             if (!response.IsSuccessStatusCode)
             {
@@ -102,12 +122,44 @@ public class PartenaireService : IPartenaireService
         {
             try
             {
-                return await _httpClient.GetAsync(url);
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                ForwardCurrentUserHeaders(request);
+                return await _httpClient.SendAsync(request);
             }
             catch (HttpRequestException) when (attempt < ConnectionRetryDelays.Length)
             {
                 await Task.Delay(ConnectionRetryDelays[attempt]);
             }
+        }
+    }
+
+    private string BuildOrganisationUrl(string escapedCode)
+    {
+        // Via la Gateway, /organisation/{everything} est traduit en /api/v1/{everything}.
+        if (_partenaireServiceUrl.EndsWith("/organisation", StringComparison.OrdinalIgnoreCase))
+            return $"{_partenaireServiceUrl}/organisations/{escapedCode}";
+
+        return $"{_partenaireServiceUrl}/api/v1/organisations/{escapedCode}";
+    }
+
+    private void ForwardCurrentUserHeaders(HttpRequestMessage request)
+    {
+        var httpContext = _httpContextAccessor.HttpContext;
+        if (httpContext is null)
+            return;
+
+        foreach (var header in new[]
+                 {
+                     "Authorization",
+                     "X-User-Name",
+                     "X-User-Code",
+                     "X-User-Roles",
+                     "X-Organisation-Code",
+                     "X-Organisation-Type"
+                 })
+        {
+            if (httpContext.Request.Headers.TryGetValue(header, out var value) && value.Count > 0)
+                request.Headers.TryAddWithoutValidation(header, value.ToArray());
         }
     }
 }
